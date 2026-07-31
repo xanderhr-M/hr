@@ -2331,6 +2331,31 @@ function orgChartManagerMap(){
   return map;
 }
 
+/** 組織圖裡，流通／加值／家電／商用事業部、運籌行政部底下的處，改成固定的指定順序顯示，
+ *  不再依人數排序；未列在這份對照表裡的事業部/部（後勤服務部、資訊部、管理部…等）不受影響，
+ *  仍維持原本依人數由多到少排序。只影響「組織圖」的方框排列順序，不影響「各處級單位人數」
+ *  長條圖（長條圖維持依人數排序，見 renderOverview() 呼叫這個函式的地方特意分開處理）。 */
+const OFFICE_DISPLAY_ORDER = {
+  '流通商品一處':0, '流通商品二處':1, '流通商品三處':2, '流通商品四處':3,
+  '流通業務一處':4, '流通業務二處':5, '流通業務三處':6, '流通業務四處':7,
+  '流通內勤業務助理處':8,
+  '加值商品一處':0, '加值商品二處':1, '加值商品三處':2,
+  '加值業務一處':3, '加值業務二處':4, '加值業務助理處':5, '周邊技術服務處':6,
+  '家電商品一處':0, '家電業務一處':1, '家電業務二處':2, '家電業務三處':3,
+  '家電品牌協銷處':4, '家電品牌業務處':5, '家電通路協銷處':6,
+  '家電業務助理處':7, '家電服務處':8, '九陽客服處':9,
+  '商用商品處':0, '商用業務一處':1, '商用業務二處':2, '系統技術服務處':3,
+  '採購作業一處':0, '採購作業二處':1, '業管處':2
+};
+/** 依 OFFICE_DISPLAY_ORDER 排序：兩邊都有指定順序時依指定順序排；只要有一邊沒有指定順序，
+ *  就維持原本依人數由多到少排序，讓沒特別要求的事業部/部不受影響。 */
+function sortOfficesForDisplay(list){
+  return list.slice().sort((a,b)=>{
+    const oa = OFFICE_DISPLAY_ORDER[a.name], ob = OFFICE_DISPLAY_ORDER[b.name];
+    if(oa !== undefined && ob !== undefined) return oa - ob;
+    return b.headcount - a.headcount;
+  });
+}
 /** 主管同時管理多個事業部時（責任範圍橫跨事業部層級），並排顯示每個事業部各自完整展開的組織圖
  *  （事業部方框＋其下各部門方框），而不是把多個事業部壓縮成同一棵樹的第二層。
  *  divisions：{code, name, headcount}[]，即該主管可視範圍內的事業部清單；
@@ -2355,7 +2380,7 @@ function renderMultiDivisionOrgChart(divisions, deptStats, highlightCode){
   (ORG_TREE.departments || DEPARTMENTS).forEach(d=>{ deptDivCode[d.code] = d.divisionCode; });
 
   const clustersHTML = divisions.map(div=>{
-    const depts = deptStats.filter(d=>deptDivCode[d.code]===div.code).sort((a,b)=>b.headcount-a.headcount);
+    const depts = sortOfficesForDisplay(deptStats.filter(d=>deptDivCode[d.code]===div.code));
     const childrenHTML = depts.map(n=>`
       <div class="oc-child">
         <div class="${boxClass(n, true)}" onclick="orgChartGoToDepartment('${n.code}')">${boxContent(n)}</div>
@@ -3126,10 +3151,12 @@ function renderOverview(stats, asOf){
     orgSubEl.textContent = rootLabel+(divInfo && divInfo.type==='中心' ? ' → 直屬處' : ' → 各處');
     // 組織圖固定呈現整個事業部/中心（不受部門篩選影響）：若目前另外選了單一處，改用忽略處篩選的
     // 統計資料重新計算，避免組織圖的人數只算到被篩選的那一個處。
-    let orgDeptSorted = deptSorted, orgActiveCount = stats.activeCount;
+    // 組織圖的處級方框排列順序改用 sortOfficesForDisplay()（見該函式說明），跟上面長條圖用的
+    // deptSorted（維持依人數排序）分開處理，只影響組織圖、不影響長條圖。
+    let orgDeptSorted = sortOfficesForDisplay(deptSorted), orgActiveCount = stats.activeCount;
     if(currentDeptFilter !== 'ALL'){
       const orgStats = computeStats(divisionScopedEmployees(), new Date());
-      orgDeptSorted = orgStats.deptStats.slice().sort((a,b)=>b.headcount-a.headcount);
+      orgDeptSorted = sortOfficesForDisplay(orgStats.deptStats.slice());
       orgActiveCount = orgStats.activeCount;
     }
     // 只有「管理範圍本身涵蓋多個部級單位」的登入者，點選根節點方框才能回到上一層組織圖：
