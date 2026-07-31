@@ -1285,6 +1285,7 @@ function genOneEmployee(deptCode, forceStatus){
     position: pick(profile.positions),
     grade: String(pick(profile.grades)),
     gradeLevel: 'P' + pick(profile.grades),
+    positionCode: 'P' + pick(profile.grades),
     jobCategory: profile.jobCat,
     identityCategory: pickW([['一般員工',92],['約聘人員',5],['建教生',3]]),
     directIndirect: rand() < (profile.direct==='直接員工' ? 0.82 : 0.05) ? profile.direct : (profile.direct==='直接員工' ? '間接員工' : '直接員工'),
@@ -1545,10 +1546,10 @@ function tenureYears(emp, asOf){
   yrs -= (Number(emp.deductYears)||0);
   return Math.max(0,yrs);
 }
-/** 「職等分布」統計用：從試算表「職級名稱」欄（如 P5、M3）取出數字部分、排除英文字，
+/** 「職等分布」統計用：從試算表 L 欄「職務代碼」（如 P5、M3）取出數字部分、排除英文字，
  *  取不到數字（欄位空白或純英文）時回傳空字串，歸類為「未填寫」。 */
 function gradeLevelOf(emp){
-  const m = String(emp.gradeLevel || '').match(/\d+/);
+  const m = String(emp.positionCode || '').match(/\d+/);
   return m ? m[0] : '';
 }
 function fmtYears(yrs){
