@@ -3273,10 +3273,10 @@ function renderOverview(stats, asOf){
     // （法務處／OA業務處，divisionCode 剛好也等於中心自己的代碼）的人會被歸到同一個桶子裡——
     // 直接登記在中心自己代碼下的人（例如副總經理本人）會被誤算進直屬處的人數，導致長條圖的
     // 「法務處」比組織圖上法務處方框顯示的人數多（實測：組織圖法務處 2 人，長條圖卻顯示 3 人，
-    // 多出來的 1 人正是登記在「行政中心」自己代碼下、不屬於法務處的人）。改成把「中心自己
-    // （不含直屬處）」與「直屬處自己」拆成兩筆精確計算，不要沿用 divisionHeadcounts() 那筆
-    // 兩者混在一起的小計。
-    const centerSelfCount = stats.active.filter(e=>e.deptCode===divInfo.code).length;
+    // 多出來的 1 人正是登記在「行政中心」自己代碼下、不屬於法務處的人）。改成單獨精確計算
+    // 「直屬處自己」的人數，不要沿用 divisionHeadcounts() 那筆跟中心自己代碼混在一起的小計；
+    // 中心自己代碼下的人依需求不在這張長條圖顯示（他們仍計入組織圖根節點的總人數，只是不
+    // 出現在「各部級單位人數」的細項裡）。
     const directOfficeCount = directOffice ? stats.active.filter(e=>e.deptCode===directOffice.code).length : 0;
     const centerSorted = divisionHeadcounts(stats.active)
       .filter(d => {
@@ -3285,7 +3285,6 @@ function renderOverview(stats, asOf){
         return info && info.centerCode === divInfo.code;
       })
       .concat(directOffice && directOfficeCount ? [{code:directOffice.code, name:directOffice.name, headcount:directOfficeCount}] : [])
-      .concat(centerSelfCount ? [{code:divInfo.code, name:divInfo.name, headcount:centerSelfCount}] : [])
       .sort((a,b)=>b.headcount-a.headcount);
     titleEl.textContent = '各部級單位人數';
     subEl.textContent = '在職員工，依人數排序（'+divInfo.name+' 彙總視角）';
