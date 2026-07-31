@@ -3209,8 +3209,23 @@ function renderComposition(stats, asOf){
   doughnutChart('c-status', ['在職','近12個月離職'], [stats.activeCount, stats.resigned12.length], [PALETTE.good, PALETTE.critical],
     {onClick: (label)=> toggleDrill('composition', 'c-status', '在職狀態', label, label==='在職' ? stats.active : stats.resigned12,
       (freshStats)=> label==='在職' ? freshStats.active : freshStats.resigned12)});
-  const eduOrder = ['博士','碩士','大學','四技','二技','高中職','國中','未填寫'];
-  const eduLabels = eduOrder.filter(k=>stats.eduCounts[k]);
+  // 「最高學歷」原本用寫死的固定清單篩選要顯示的項目，但實際試算表填的學歷用詞（「學士」不是
+  // 「大學」、還有「五專」「二專」「高職（職業科）」「高中（普通科）」「國中/附設國中部」，以及
+  // 「(肄業)」結尾的肄業／未畢業變體）幾乎都對不上那份清單，導致這些人整個從圖表消失、不計入
+  // 總數（實測：282 位在職員工，固定清單只認得出 28 位，其餘 254 位完全沒顯示，包含人數最多的
+  // 「學士」170 人）。改成一律從 stats.eduCounts 實際出現過的學歷值動態取得清單，不會再因為
+  // 用詞對不上而漏掉任何人；EDU_PRIORITY 只用來決定「常見學歷」的顯示順序（學歷越高排越前面），
+  // 沒列在裡面的學歷值依人數多到少排在後面，「未填寫」固定排最後。
+  const EDU_PRIORITY = ['博士','碩士','大學','學士','四技','二技','五專','二專','高中職','高中（普通科）','高職（職業科）','國中'];
+  const eduKeys = Object.keys(stats.eduCounts).filter(k=>k!=='未填寫');
+  eduKeys.sort((a,b)=>{
+    const ia = EDU_PRIORITY.indexOf(a), ib = EDU_PRIORITY.indexOf(b);
+    if(ia!==-1 && ib!==-1) return ia-ib;
+    if(ia!==-1) return -1;
+    if(ib!==-1) return 1;
+    return stats.eduCounts[b]-stats.eduCounts[a];
+  });
+  const eduLabels = stats.eduCounts['未填寫'] ? [...eduKeys, '未填寫'] : eduKeys;
   doughnutChart('c-edu', eduLabels, eduLabels.map(k=>stats.eduCounts[k]), CAT.slice(0,eduLabels.length),
     {onClick: onClick('c-edu', '最高學歷', (e,label)=>(e.education||'未填寫')===label)});
   const jobLabels = Object.keys(stats.jobCatCounts).sort((a,b)=>stats.jobCatCounts[b]-stats.jobCatCounts[a]);
