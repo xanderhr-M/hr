@@ -787,6 +787,28 @@ const CAT = [PALETTE.blue, PALETTE.orange, PALETTE.aqua, PALETTE.yellow, PALETTE
 /** 年齡／年資級距定義：提到模組層級，讓 computeStats() 與圖表下鑽點選都能共用同一份定義，避免兩邊各自維護一份而不同步。 */
 const AGE_BANDS = [['<25',0,24],['25-34',25,34],['35-44',35,44],['45-54',45,54],['55+',55,999]];
 const TENURE_BANDS = [['未滿1年',0,1],['1-3年',1,3],['3-5年',3,5],['5-10年',5,10],['10年以上',10,999]];
+/** 「最高學歷」統計整併：試算表裡「學士」與「學士(肄業)」合併算成「學士」；「四技」「四技(肄業)」
+ *  「二技」三種合併算成「技術學院」；「高中（普通科）」「高職（職業科）」「高職（職業科）(肄業)」
+ *  「國中/附設國中部」四種合併算成「高中職」；「五專」「二專」合併算成「專科」，其餘學歷值原樣
+ *  照計。所有讀取員工學歷做分類統計／篩選的地方（computeStats() 的 eduCounts、圖表下鑽點選比對）
+ *  都要透過 eduBucketOf() 取得整併後的值，不要直接讀 e.education，否則會出現圖表算的是整併後的
+ *  桶子、但點選篩選卻用整併前的原始值去比對，兩邊對不起來。 */
+const EDU_MERGE_MAP = {
+  '學士(肄業)': '學士',
+  '四技': '技術學院',
+  '四技(肄業)': '技術學院',
+  '二技': '技術學院',
+  '高中（普通科）': '高中職',
+  '高職（職業科）': '高中職',
+  '高職（職業科）(肄業)': '高中職',
+  '國中/附設國中部': '高中職',
+  '五專': '專科',
+  '二專': '專科'
+};
+function eduBucketOf(emp){
+  const raw = emp.education || '未填寫';
+  return EDU_MERGE_MAP[raw] || raw;
+}
 const MONTH_LABELS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 
 /* ---------- 組織結構（示範資料；設定 GS_URL 後改由「組織架構」工作表提供）----------
@@ -1584,6 +1606,10 @@ function computeStats(list, asOf){
   const avgAge = active.length ? active.reduce((s,e)=>s+ageOn(e.birthday,asOf),0)/active.length : 0;
   const avgTenureAll = active.length ? active.reduce((s,e)=>s+tenureYears(e,asOf),0)/active.length : 0;
 
+  // 最高學歷改用 eduBucketOf() 整併後的值分類統計，理由見該函式的說明。
+  const eduCounts = {};
+  active.forEach(e=>{ const k=eduBucketOf(e); eduCounts[k]=(eduCounts[k]||0)+1; });
+
   return {
     list, active, resigned12,
     activeCount: active.length,
@@ -1591,7 +1617,7 @@ function computeStats(list, asOf){
     newHiresThisMonth: newHiresThisMonthList.length, newHiresThisMonthList,
     resignedThisMonth: resignedThisMonthList.length, resignedThisMonthList,
     genderCounts: count(active,'gender'),
-    eduCounts: count(active,'education'),
+    eduCounts,
     jobCatCounts: count(active,'jobCategory'),
     bloodTypeCounts: count(active,'bloodType'),
     gradeCounts: gradeLevelCounts,
@@ -3216,7 +3242,7 @@ function renderComposition(stats, asOf){
   // 「學士」170 人）。改成一律從 stats.eduCounts 實際出現過的學歷值動態取得清單，不會再因為
   // 用詞對不上而漏掉任何人；EDU_PRIORITY 只用來決定「常見學歷」的顯示順序（學歷越高排越前面），
   // 沒列在裡面的學歷值依人數多到少排在後面，「未填寫」固定排最後。
-  const EDU_PRIORITY = ['博士','碩士','大學','學士','四技','二技','五專','二專','高中職','高中（普通科）','高職（職業科）','國中'];
+  const EDU_PRIORITY = ['博士','碩士','大學','學士','技術學院','專科','高中職'];
   const eduKeys = Object.keys(stats.eduCounts).filter(k=>k!=='未填寫');
   eduKeys.sort((a,b)=>{
     const ia = EDU_PRIORITY.indexOf(a), ib = EDU_PRIORITY.indexOf(b);
@@ -3227,7 +3253,7 @@ function renderComposition(stats, asOf){
   });
   const eduLabels = stats.eduCounts['未填寫'] ? [...eduKeys, '未填寫'] : eduKeys;
   doughnutChart('c-edu', eduLabels, eduLabels.map(k=>stats.eduCounts[k]), CAT.slice(0,eduLabels.length),
-    {onClick: onClick('c-edu', '最高學歷', (e,label)=>(e.education||'未填寫')===label)});
+    {onClick: onClick('c-edu', '最高學歷', (e,label)=>eduBucketOf(e)===label)});
   const jobLabels = Object.keys(stats.jobCatCounts).sort((a,b)=>stats.jobCatCounts[b]-stats.jobCatCounts[a]);
   barChart('c-jobcat', jobLabels, jobLabels.map(k=>stats.jobCatCounts[k]),
     {horizontal:true, showValues:true, onClick: onClick('c-jobcat', '職種', (e,label)=>(e.jobCategory||'未填寫')===label)});
