@@ -773,7 +773,7 @@ tr:hover td{background:var(--paper)}
 
 /* ---------- Google 試算表後端設定（對應 Code.gs）---------- */
 const GS_CFG_KEY = 'hr_dash_gs_url';
-let GS_URL = (localStorage.getItem(GS_CFG_KEY) || 'https://script.google.com/macros/s/AKfycbyMIOOBQRQu1d0qACbmVLUbKyPLpqqhd2FQ_hQEKOebaMkqGaNN_lvjGEPZNf995KLi/exec').trim();
+let GS_URL = (localStorage.getItem(GS_CFG_KEY) || 'https://script.google.com/macros/s/AKfycbwEXtJiV9lVNEBZT0lYXkLsablEwntU4bAJPhMGlniwto0OQEz0EAXfRgQxmCJbJAJ96Q/exec').trim();
 
 /* ---------- 色彩（依 dataviz 規範：單一數列用品牌色，多數列用固定順序類別色，狀態用狀態色）---------- */
 const PALETTE = {
@@ -1271,48 +1271,6 @@ function resetDemoData(){
   document.getElementById('import-status').innerHTML = '<span style="color:var(--green)">已重置為示範資料</span>';
 }
 
-/* ---------- 資料來源設定 UI ---------- */
-function saveGSUrl(){
-  const v = document.getElementById('gs-url-input').value.trim();
-  GS_URL = v;
-  localStorage.setItem(GS_CFG_KEY, v);
-  document.getElementById('gs-url-status').innerHTML = v
-    ? '<span style="color:var(--green)">已儲存，下次登入／同步將使用此試算表</span>'
-    : '<span style="color:var(--ink3)">已清空，將使用本機示範資料</span>';
-  renderGSUrlDisplay();
-}
-function renderGSUrlDisplay(){
-  const el = document.getElementById('gs-url-display');
-  if(!el) return;
-  el.textContent = GS_URL || '（尚未設定，目前使用本機示範資料）';
-  const input = document.getElementById('gs-url-input');
-  if(input) input.value = GS_URL;
-}
-function testGSConnection(){
-  const status = document.getElementById('gs-url-status');
-  if(!GS_URL){ status.innerHTML = '<span style="color:var(--red)">請先輸入並儲存 Apps Script 網址</span>'; return; }
-  status.innerHTML = '<span style="color:var(--ink3)">連線測試中…</span>';
-  gsGet('getEmployees').then(d=>{
-    status.innerHTML = d.ok
-      ? `<span style="color:var(--green)">連線成功，試算表內有 ${d.list.length} 筆員工資料</span>`
-      : `<span style="color:var(--red)">連線失敗：${d.error||'未知錯誤'}</span>`;
-  }).catch(err=>{
-    status.innerHTML = `<span style="color:var(--red)">連線失敗：${err.message}</span>`;
-  });
-}
-function syncFromBackend(){
-  const status = document.getElementById('gs-url-status');
-  if(!GS_URL){ status.innerHTML = '<span style="color:var(--red)">請先設定 Apps Script 網址</span>'; return; }
-  status.innerHTML = '<span style="color:var(--ink3)">同步中…</span>';
-  loadEmployees(()=>{
-    loadOrgTree(()=>{
-      populateOrgFilters();
-      status.innerHTML = `<span style="color:var(--green)">已同步，目前共 ${EMPLOYEES.length} 筆員工資料</span>`;
-      refreshAccountsFromBackend(()=>{ renderAdminList(); });
-      renderAll();
-    });
-  });
-}
 function refreshAccountsFromBackend(cb){
   if(!GS_URL){ cb && cb(); return; }
   gsGet('getAccounts').then(d=>{
@@ -2285,7 +2243,7 @@ function renderAll(){
   if(activeTab==='tab-movement') renderMovement(stats);
   if(activeTab==='tab-care') renderCare(stats, asOf);
   if(activeTab==='tab-directory') renderDirectory();
-  if(activeTab==='tab-admin' && currentUser.role==='admin'){ renderAdminList(); renderFieldLegend(); renderGSUrlDisplay(); }
+  if(activeTab==='tab-admin' && currentUser.role==='admin'){ renderAdminList(); renderFieldLegend(); }
   if(activeTab==='tab-notify' && currentUser.role==='admin'){ renderNotifySettings(); }
 }
 

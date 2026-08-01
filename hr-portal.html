@@ -18,6 +18,9 @@
   --red:#8b2020;--red-light:#fde8e8;
   --green:#1a7a3a;--green-light:#e8f5ed;
   --blue:#1a5fa8;--blue-light:#e8f0fb;
+  /* --pink / --pink-light 由「員工賀卡管理」區沿用（週年賀卡統計卡、當月份標示用），
+     原本 HR 分析的調色盤沒有這組顏色，是併入賀卡系統時從 card-admin.html 帶過來的 */
+  --pink:#c23b7a;--pink-light:#fbe9f2;
   --radius:4px;--radius-lg:8px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -55,6 +58,21 @@ button{font-family:'Noto Sans TC',sans-serif;cursor:pointer;border:none;border-r
 .nav-item:hover{background:var(--paper);color:var(--ink)}
 .nav-item.active{background:var(--accent-light);color:var(--accent);border-left-color:var(--accent);font-weight:500}
 .nav-item .ni{font-size:1rem;width:18px;text-align:center}
+/* ── 側邊選單主功能群組（人力資源分析／員工賀卡管理，單開手風琴）──
+   .nav-group-children 預設收合，只有標題列帶 .expanded 時才展開；用相鄰兄弟選擇器
+   （.expanded + .nav-group-children）控制，所以 JS 只要切換標題列的 class 即可，
+   不必再另外操作子清單的樣式。 */
+.nav-group{border-bottom:1px solid var(--paper3)}
+.nav-group:last-child{border-bottom:none}
+.nav-group-header{display:flex;align-items:center;gap:.6rem;padding:.75rem 1.4rem;font-size:.85rem;font-weight:700;color:var(--ink2);cursor:pointer;transition:all .12s;border-left:3px solid transparent;user-select:none}
+.nav-group-header:hover{background:var(--paper);color:var(--ink)}
+.nav-group-header.expanded{background:var(--paper);color:var(--ink)}
+.nav-group-header .ni{font-size:1rem;width:18px;text-align:center}
+.nav-group-caret{margin-left:auto;font-size:.65rem;color:var(--ink3);transition:transform .18s}
+.nav-group-header.expanded .nav-group-caret{transform:rotate(90deg)}
+.nav-group-children{display:none;padding:.2rem 0 .45rem}
+.nav-group-header.expanded + .nav-group-children{display:block}
+.nav-group-children .nav-item{padding-left:2.1rem;font-size:.82rem}
 .sb-footer{padding:1rem 1.4rem;border-top:1px solid var(--paper3)}
 .sb-user{display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem}
 .su-av{width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#fff;font-weight:700;flex-shrink:0}
@@ -416,6 +434,130 @@ tr:hover td{background:var(--paper)}
 
 .multiselect-note{font-size:.72rem;color:var(--ink3);margin-top:.3rem}
 
+/* ═══════════════════════════════════════════════════════════════
+   員工賀卡管理（由 card-admin.html 併入）
+   以下樣式只有「員工賀卡管理」六個分頁會用到；與 HR 分析既有的
+   .stat-grid/.stat-card/.kpi-grid/.table-wrap/.toggle/.badge/.btn-*/.upload-zone
+   同名者不重複定義，僅補上賀卡區額外需要的變化型（.sc-val.pink、.badge.wait 等）。
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 賀卡統計卡的粉紅色數字（自動寄送狀態）與「等待中」徽章 */
+.sc-val.pink{color:var(--pink)}
+.badge.wait{background:var(--blue-light);color:var(--blue)}
+.sort-icon-idle{color:var(--paper3)}
+.sortable-th:hover .sort-icon-idle{color:var(--ink3)}
+
+/* 儀表板子分頁（生日賀卡／週年賀卡切換） */
+.dash-subnav{display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--paper3)}
+.dash-subnav-item{padding:.6rem 1rem;font-size:.95rem;font-weight:700;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .12s}
+.dash-subnav-item:hover{color:var(--ink)}
+.dash-subnav-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+.dash-sub{display:none}
+.dash-sub.active{display:block}
+
+/* 儀表板小型統計面板（各月份生日／星座／滿週年／年資區間切換） */
+.dash-row{display:flex;gap:1rem;align-items:flex-start}
+.dash-row>.table-wrap{flex:1.6;min-width:0}
+.mini-stat-panel{flex:1;min-width:0;background:#fff;border:1px solid var(--paper3);border-radius:var(--radius-lg);padding:1rem 1.25rem}
+.mini-stat-panel h3{font-size:.95rem;margin:0}
+.mini-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:.9rem}
+.mini-stat-grid.cols-2{grid-template-columns:repeat(2,1fr)}
+.mini-stat-grid.cols-6{grid-template-columns:repeat(6,1fr)}
+.mini-stat-tile{background:var(--paper2);border-radius:var(--radius);padding:.55rem .4rem;text-align:center}
+.mini-stat-tile.mst-current{background:var(--pink-light)}
+.mini-stat-tile.mst-current .mst-val{color:var(--pink)}
+.mini-stat-tile .mst-lbl{font-size:.68rem;color:var(--ink3);margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-stat-tile .mst-val{font-size:1.2rem;font-weight:700;color:var(--ink)}
+.mini-stat-tile .mst-sub{font-size:.65rem;color:var(--ink3);margin-top:.15rem}
+.mini-stat-tile .mst-sub-red{color:#e8280f;font-weight:700}
+
+/* 賀卡區表格：欄位一律置中、不換行（HR 分析的置中規則是綁在 #tab-directory 上，這裡另外指定） */
+.emp-table td{white-space:nowrap}
+.emp-table th,.emp-table td{text-align:center}
+.dash-table th,.dash-table td{text-align:center}
+.log-table th,.log-table td{text-align:center}
+
+/* 賀卡區的設定列：欄寬與 HR 分析既有 .config-row 略有不同（標籤較長、輸入框較短），
+   只在賀卡分頁內覆寫，不動到既有的系統管理／通知設定頁 */
+#tab-card-sendsettings .config-row{flex-wrap:wrap;margin-bottom:.9rem}
+#tab-card-sendsettings .config-row label{width:160px}
+#tab-card-sendsettings .config-row input,#tab-card-sendsettings .config-row select{max-width:220px}
+
+/* 賀卡圖片預覽 */
+.card-preview-wrap{background:var(--paper2);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;margin-bottom:1rem}
+.card-preview-wrap img{max-width:100%;max-height:260px;border-radius:var(--radius);box-shadow:0 2px 12px rgba(0,0,0,.1)}
+.card-preview-empty{color:var(--ink3);font-size:.85rem;padding:2rem}
+
+/* Drive 圖庫 */
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}
+.gallery-item{border:2px solid var(--paper3);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:border-color .15s;background:#fff;position:relative}
+.gallery-item:hover{border-color:var(--accent)}
+.gallery-item.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(192,17,26,.18)}
+.gallery-item img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--paper2)}
+.gallery-item .gi-name{font-size:.72rem;color:var(--ink2);padding:.5rem .6rem;border-top:1px solid var(--paper3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gallery-item .gi-badge{position:absolute;top:.4rem;left:.4rem;background:var(--accent);color:#fff;font-size:.68rem;font-weight:700;padding:.15rem .55rem;border-radius:10px}
+.gallery-item .gi-del{position:absolute;top:.4rem;right:.4rem;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:.7rem;display:flex;align-items:center;justify-content:center}
+.gallery-item .gi-del:hover{background:var(--red)}
+
+/* 佔位符標籤（{{姓名}} 等，點一下插入到主旨／內文游標處） */
+.ph-chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+.ph-chip{background:var(--paper2);color:var(--ink2);border:1px solid var(--paper3);padding:.3rem .7rem;border-radius:12px;font-size:.75rem;cursor:pointer}
+.ph-chip:hover{background:var(--accent-light);color:var(--accent2);border-color:var(--accent)}
+
+/* 賀卡內文富文字工具列 */
+.rte-toolbar{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;background:var(--paper2);border:1px solid var(--paper3);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;padding:.5rem .6rem}
+.rte-toolbar button{background:#fff;border:1px solid var(--paper3);color:var(--ink2);width:30px;height:30px;font-size:.85rem;border-radius:var(--radius)}
+.rte-toolbar button:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent2)}
+.rte-toolbar select{width:auto;padding:.3rem;font-size:.78rem;height:30px}
+.fontsize-input-wrap{display:flex;align-items:center;gap:.3rem;background:#fff;border:1px solid var(--paper3);border-radius:var(--radius);padding:0 .5rem;height:30px}
+.rte-fontsize{width:44px;padding:0;border:none;height:28px;font-size:.82rem;text-align:center}
+.rte-fontsize:focus{box-shadow:none}
+.fontsize-unit{font-size:.72rem;color:var(--ink3)}
+.rte-body:focus{border-color:var(--accent)}
+
+/* 顏色選取器（點色塊選色，取代原生調色盤） */
+.color-picker-wrap{position:relative}
+.color-btn{display:flex;align-items:center;gap:.4rem;width:auto!important;height:30px;padding:0 .6rem;font-size:.78rem;color:var(--ink2)}
+.color-btn-swatch{width:15px;height:15px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
+.color-palette{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:20;background:#fff;border:1px solid var(--paper3);border-radius:var(--radius-lg);box-shadow:0 6px 20px rgba(0,0,0,.12);padding:.75rem;width:200px}
+.color-palette.open{display:block}
+.color-swatch-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.4rem}
+.color-swatch{width:24px;height:24px;border-radius:50%;border:1px solid rgba(0,0,0,.12);cursor:pointer}
+.color-swatch:hover{transform:scale(1.15);box-shadow:0 0 0 2px rgba(0,0,0,.08)}
+.color-palette-custom{display:flex;align-items:center;justify-content:space-between;margin-top:.65rem;padding-top:.65rem;border-top:1px solid var(--paper3);font-size:.78rem;color:var(--ink3)}
+.color-palette-custom input[type=color]{width:32px;height:26px;padding:0;border:1px solid var(--paper3);border-radius:var(--radius);cursor:pointer}
+
+/* CARD CANVAS：內文直接疊在賀卡圖片上編輯，寄信時後端會用 Google 簡報把兩者合成成一張
+   圖片再寄出，所以這裡的疊圖預覽跟實際收到的信件是一致的（而非用瀏覽器 CSS 硬疊） */
+/* max-width 故意設成跟後端 CARD_W_PT 完全一樣（720px＝720pt）：字級／行高的數字在編輯區是
+   當作 CSS px、在 Slides 合成時是當作 pt 直接套用，兩者單位本來就不完全相等，只有當這個
+   預覽框「真的以 720px 寬度呈現」時，px 對 pt 才會是 1:1，字級佔卡片高度的比例才會準確對應
+   到合成後的圖片，不然這個框跟後端頁面寬度對不起來，同一個字級數字在編輯區跟合成結果看起來
+   佔的比例就會不一樣，造成文字垂直位置對不齊 */
+.card-canvas{position:relative;width:100%;max-width:720px;aspect-ratio:16/9;background:var(--paper2);border:1px solid var(--paper3);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden}
+.card-canvas .card-canvas-img{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat}
+.card-canvas .rte-body{position:absolute;top:5%;left:5%;right:5%;bottom:4%;padding:0;font-size:14px;line-height:1.5;outline:none;overflow:auto;color:#1a1814;font-family:'Noto Sans TC',sans-serif}
+/* 瀏覽器對 <p> 標籤預設會加上約 1em 的上下留白（<div> 沒有這個問題），如果內文還留著舊版
+   預設內容的 <p> 標籤（早期範本文字就是用 <p> 包每一行），編輯區看到的文字位置就會因為這些
+   看不到的留白往下多推一截，但合成到 Slides 那邊完全沒有對應的留白，兩邊位置才會對不起來。
+   統一把 .rte-body 裡的 p/div 邊界清成 0，確保編輯區不會有這種瀏覽器預設造成的隱形留白 */
+.card-canvas .rte-body p,.card-canvas .rte-body div{margin:0}
+.card-canvas .card-canvas-empty-msg{display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;color:var(--ink3);font-size:.85rem;padding:2rem}
+.card-canvas.empty .rte-body{display:none}
+.card-canvas.empty .card-canvas-empty-msg{display:flex}
+
+/* 密件副本（BCC）Email 標籤列 */
+.chip-list{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem;min-height:32px}
+.chip{display:flex;align-items:center;gap:.4rem;background:var(--accent-light);color:var(--accent2);border:1px solid rgba(192,17,26,.25);padding:.3rem .5rem .3rem .8rem;border-radius:14px;font-size:.8rem}
+.chip .x{cursor:pointer;font-weight:700;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;font-size:.7rem}
+.chip .x:hover{background:rgba(139,32,32,.15);color:var(--red)}
+.chip-input-row{display:flex;gap:.6rem}
+.chip-input-row input{flex:1}
+
+/* 啟用自動寄送開關（.toggle／.toggle-slider 沿用既有通知設定頁的樣式） */
+.toggle-row{display:flex;align-items:center;gap:.75rem}
+.toggle-row .toggle{flex-shrink:0}
+
 </style>
 </head>
 <body>
@@ -446,15 +588,37 @@ tr:hover td{background:var(--paper)}
   <div class="sidebar">
     <div class="sb-logo"><img src="data:image/png;base64,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" style="height:30px"><p>人力資源即時分析平台</p></div>
     <div class="sb-nav">
-      <div class="nav-item active" data-tab="tab-overview" onclick="switchTab('tab-overview')"><span class="ni">📊</span>總覽</div>
-      <div class="nav-item" data-tab="tab-composition" onclick="switchTab('tab-composition')"><span class="ni">🧩</span>人力組成</div>
-      <div class="nav-item" data-tab="tab-movement" onclick="switchTab('tab-movement')"><span class="ni">🔄</span>異動與年資</div>
-      <div class="nav-item" data-tab="tab-care" onclick="switchTab('tab-care')"><span class="ni">🎂</span>員工關懷</div>
-      <div class="nav-item" data-tab="tab-directory" onclick="switchTab('tab-directory')"><span class="ni">📋</span>員工名單</div>
+      <!-- 兩大主功能群組，單開手風琴（展開一個時自動收合另一個），
+           展開狀態由 toggleNavGroup()／syncNavGroupToTab() 控制 -->
+      <div class="nav-group">
+        <div class="nav-group-header expanded" id="nav-group-hr" onclick="toggleNavGroup('nav-group-hr')"><span class="ni">📈</span>人力資源分析<span class="nav-group-caret">▶</span></div>
+        <div class="nav-group-children">
+          <div class="nav-item active" data-tab="tab-overview" onclick="switchTab('tab-overview')"><span class="ni">📊</span>總覽</div>
+          <div class="nav-item" data-tab="tab-composition" onclick="switchTab('tab-composition')"><span class="ni">🧩</span>人力組成</div>
+          <div class="nav-item" data-tab="tab-movement" onclick="switchTab('tab-movement')"><span class="ni">🔄</span>異動與年資</div>
+          <div class="nav-item" data-tab="tab-care" onclick="switchTab('tab-care')"><span class="ni">🎂</span>員工關懷</div>
+          <div class="nav-item" data-tab="tab-directory" onclick="switchTab('tab-directory')"><span class="ni">📋</span>員工名單</div>
+          <!-- HR-ONLY-START -->
+          <div class="nav-item" id="nav-chartdownload" data-tab="tab-chartdownload" onclick="switchTab('tab-chartdownload')" style="display:none"><span class="ni">⬇️</span>圖表下載</div>
+          <div class="nav-item" id="nav-notify" data-tab="tab-notify" onclick="switchTab('tab-notify')" style="display:none"><span class="ni">🔔</span>通知設定</div>
+          <div class="nav-item" id="nav-admin" data-tab="tab-admin" onclick="switchTab('tab-admin')" style="display:none"><span class="ni">⚙️</span>系統管理</div>
+          <!-- HR-ONLY-END -->
+        </div>
+      </div>
       <!-- HR-ONLY-START -->
-      <div class="nav-item" id="nav-chartdownload" data-tab="tab-chartdownload" onclick="switchTab('tab-chartdownload')" style="display:none"><span class="ni">⬇️</span>圖表下載</div>
-      <div class="nav-item" id="nav-notify" data-tab="tab-notify" onclick="switchTab('tab-notify')" style="display:none"><span class="ni">🔔</span>通知設定</div>
-      <div class="nav-item" id="nav-admin" data-tab="tab-admin" onclick="switchTab('tab-admin')" style="display:none"><span class="ni">⚙️</span>系統管理</div>
+      <!-- 員工賀卡管理：整區僅開放給 role==='admin'，群組標題與子項一律預設隱藏，
+           由 enterApp() 依角色開啟（比照 nav-chartdownload／nav-notify／nav-admin 的作法） -->
+      <div class="nav-group">
+        <div class="nav-group-header" id="nav-group-cards" onclick="toggleNavGroup('nav-group-cards')" style="display:none"><span class="ni">💌</span>員工賀卡管理<span class="nav-group-caret">▶</span></div>
+        <div class="nav-group-children">
+          <div class="nav-item" id="nav-card-dashboard" data-tab="tab-card-dashboard" onclick="switchTab('tab-card-dashboard')"><span class="ni">📊</span>儀表板</div>
+          <div class="nav-item" id="nav-card-employees" data-tab="tab-card-employees" onclick="switchTab('tab-card-employees')"><span class="ni">🎂</span>員工資料</div>
+          <div class="nav-item" id="nav-card-birthday" data-tab="tab-card-birthday" onclick="switchTab('tab-card-birthday')"><span class="ni">🎁</span>生日賀卡管理</div>
+          <div class="nav-item" id="nav-card-anniversary" data-tab="tab-card-anniversary" onclick="switchTab('tab-card-anniversary')"><span class="ni">🏆</span>週年賀卡管理</div>
+          <div class="nav-item" id="nav-card-sendsettings" data-tab="tab-card-sendsettings" onclick="switchTab('tab-card-sendsettings')"><span class="ni">⏰</span>寄送設定</div>
+          <div class="nav-item" id="nav-card-sendlog" data-tab="tab-card-sendlog" onclick="switchTab('tab-card-sendlog')"><span class="ni">📜</span>寄送紀錄</div>
+        </div>
+      </div>
       <!-- HR-ONLY-END -->
     </div>
     <div class="sb-footer">
@@ -726,25 +890,6 @@ tr:hover td{background:var(--paper)}
       <div class="page-sub">帳號權限依「負責部門」決定可檢視之人力範圍</div>
 
       <div class="config-card">
-        <h3>資料來源設定</h3>
-        <p style="font-size:.82rem;color:var(--ink3);margin-bottom:.9rem;line-height:1.7">
-          設定 Google Apps Script 網頁應用程式網址後，登入驗證、員工資料、帳號管理將改為讀寫 Google 試算表；
-          連線失敗時會自動回退為本機資料，不影響離線使用。部署步驟請見 <code>Code.gs</code> 檔案開頭說明。
-        </p>
-        <div class="config-row">
-          <label>Apps Script 網址</label>
-          <input type="text" id="gs-url-input" placeholder="https://script.google.com/macros/s/xxxxx/exec">
-        </div>
-        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin:.75rem 0">
-          <button class="btn-primary btn-sm" onclick="saveGSUrl()">儲存設定</button>
-          <button class="btn-secondary btn-sm" onclick="testGSConnection()">測試連線</button>
-          <button class="btn-secondary btn-sm" onclick="syncFromBackend()">↻ 立即從試算表同步</button>
-        </div>
-        <div id="gs-url-status" style="font-size:.8rem"></div>
-        <div class="url-display" id="gs-url-display"></div>
-      </div>
-
-      <div class="config-card">
         <h3>管理員／主管帳號</h3>
         <div class="admin-list" id="admin-list"></div>
         <button class="btn-primary btn-sm" style="margin-top:1rem" onclick="openAccountModal()">＋ 新增帳號</button>
@@ -865,6 +1010,374 @@ tr:hover td{background:var(--paper)}
         <div id="notify-status" style="margin-top:.75rem;font-size:.82rem"></div>
       </div>
     </div>
+
+    <!-- ═══════ 員工賀卡管理（由 card-admin.html 併入，整區 admin-only）═══════ -->
+
+    <!-- ── 賀卡儀表板 ── -->
+    <div id="tab-card-dashboard" class="tab-content">
+      <div class="page-title">賀卡儀表板</div>
+      <div class="page-sub" id="dash-updated">載入中…</div>
+
+      <div class="dash-subnav">
+        <div class="dash-subnav-item active" id="dash-subnav-bday" onclick="showCardDashSub('bday')">🎂 生日賀卡</div>
+        <div class="dash-subnav-item" id="dash-subnav-anniv" onclick="showCardDashSub('anniv')">🏆 週年賀卡</div>
+      </div>
+
+      <div class="dash-sub active" id="dash-sub-bday">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="sc-val ink" id="st-total">—</div><div class="sc-lbl">在職員工總數</div></div>
+          <div class="stat-card"><div class="sc-val blue" id="st-upcoming">—</div><div class="sc-lbl">30 天內壽星</div></div>
+          <div class="stat-card"><div class="sc-val green" id="st-sent">—</div><div class="sc-lbl">今年已寄送</div></div>
+          <div class="stat-card"><div class="sc-val pink" id="st-schedule">—</div><div class="sc-lbl">自動寄送狀態</div></div>
+        </div>
+        <div class="mini-stat-panel">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem">
+            <h3 id="bd-month-title">各月份生日人數</h3>
+            <button class="btn-sm btn-secondary" id="bd-month-toggle-btn" onclick="toggleMonthZodiacView()">🔮 各星座人數統計</button>
+          </div>
+          <div class="mini-stat-grid cols-6" id="bd-month-stats"></div>
+        </div>
+        <div class="table-wrap" style="margin-top:1rem">
+          <div class="table-head"><h3>近期生日提醒（未來 30 天）</h3><button class="btn-sm btn-primary" onclick="switchTab('tab-card-employees')">查看全部 →</button></div>
+          <div id="dash-upcoming"><div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div></div>
+        </div>
+      </div>
+
+      <div class="dash-sub" id="dash-sub-anniv">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="sc-val ink" id="st-anniv-total">—</div><div class="sc-lbl">在職員工總數</div></div>
+          <div class="stat-card"><div class="sc-val blue" id="st-anniv-upcoming">—</div><div class="sc-lbl">30 天內到職週年</div></div>
+          <div class="stat-card"><div class="sc-val green" id="st-anniv-sent">—</div><div class="sc-lbl">今年已寄送</div></div>
+          <div class="stat-card"><div class="sc-val pink" id="st-anniv-schedule">—</div><div class="sc-lbl">自動寄送狀態</div></div>
+        </div>
+        <div class="mini-stat-panel">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem">
+            <h3 id="anniv-milestone-title">今年滿週年人數統計</h3>
+            <button class="btn-sm btn-secondary" id="anniv-milestone-toggle-btn" onclick="toggleMilestoneTenureView()">📊 年資區間統計</button>
+          </div>
+          <div class="mini-stat-grid cols-6" id="anniv-milestone-stats"></div>
+        </div>
+        <div class="table-wrap" style="margin-top:1rem">
+          <div class="table-head"><h3>近期到職週年提醒（未來 30 天）</h3><button class="btn-sm btn-primary" onclick="switchTab('tab-card-employees')">查看全部 →</button></div>
+          <div id="dash-anniv-upcoming"><div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 賀卡員工資料（寄送狀態列表；新增／編輯員工請改用「系統管理 → 資料匯入」）── -->
+    <div id="tab-card-employees" class="tab-content">
+      <div class="page-title">賀卡員工資料</div>
+      <div class="page-sub">列出「員工資料」中在職員工的生日／到職週年與今年賀卡寄送狀態；員工資料的新增與修改請至「系統管理 → 資料匯入」以 CSV 批次匯入</div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3>員工列表 <span id="emp-count" style="font-size:.8rem;font-weight:400;color:var(--ink3)"></span></h3>
+          <div class="table-actions">
+            <div class="search-box"><span class="si">🔍</span><input type="text" id="emp-search" placeholder="搜尋姓名、部門、工號…" oninput="filterCardEmployees()"></div>
+            <select class="filter-select" id="emp-filter" onchange="filterCardEmployees()">
+              <option value="">全部狀態</option>
+              <option value="sent">今年已寄送</option>
+              <option value="pending">今年未寄送</option>
+            </select>
+            <button class="btn-sm btn-secondary" onclick="loadCardEmployees()">🔄 重新整理</button>
+          </div>
+        </div>
+        <div id="emp-table-wrap"><div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div></div>
+      </div>
+    </div>
+
+    <!-- ── 生日賀卡管理 ── -->
+    <div id="tab-card-birthday" class="tab-content">
+      <div class="page-title">生日賀卡管理</div>
+      <div class="page-sub">上傳/選擇圖片並編寫主旨與內文，圖片庫獨立存放於 Google Drive「員工生日賀卡圖片」資料夾</div>
+      <div class="config-card">
+        <h3>主旨</h3>
+        <input type="text" id="bd-subject" placeholder="例如：🎉 {{姓名}}，生日快樂！">
+        <div class="ph-chips">
+          <span class="ph-chip" onclick="insertPlaceholder('bd-subject','{{姓名}}')">{{姓名}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('bd-subject','{{部門}}')">{{部門}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('bd-subject','{{工號}}')">{{工號}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('bd-subject','{{生日}}')">{{生日}}</span>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <h3>內文（直接寫在賀卡圖片上）</h3>
+        <div class="config-hint" style="margin:0 0 .75rem">底圖為下方目前使用中的圖片，文字會直接疊在圖片上。寄送時後端會把圖片與內文合成成一張圖片再寄出，確保 Outlook 等所有信箱都能正確顯示疊圖效果，跟這裡看到的一致</div>
+        <div class="rte-toolbar">
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('birthday','bold')"><b>B</b></button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('birthday','italic')"><i>I</i></button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('birthday','underline')"><u>U</u></button>
+          <div class="fontsize-input-wrap" title="字級（點選數字直接輸入，跟一般文書軟體一樣）">
+            <input type="number" class="rte-fontsize" id="bd-fontsize" min="6" max="96" step="1" value="14"
+                   onchange="applyFontSize('birthday', this.value)"
+                   onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }">
+            <span class="fontsize-unit">pt</span>
+          </div>
+          <div class="fontsize-input-wrap" title="行高（游標所在這一行的行距倍數，空白行也適用；不選文字、只把游標移到該行即可套用）">
+            <input type="number" class="rte-fontsize" id="bd-lineheight" min="1" max="3" step="0.1" value="1.5"
+                   onchange="applyLineHeight('birthday', this.value)"
+                   onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }">
+            <span class="fontsize-unit">行高</span>
+          </div>
+          <div class="color-picker-wrap">
+            <button type="button" class="color-btn" onmousedown="event.preventDefault()" onclick="toggleColorPalette('birthday', event)" title="文字顏色">
+              <span class="color-btn-swatch" id="bd-color-swatch" style="background:#1a1814"></span>顏色
+            </button>
+            <div class="color-palette" id="bd-color-palette">
+              <div class="color-swatch-grid" id="bd-color-grid"></div>
+              <div class="color-palette-custom">
+                <span>自訂顏色</span>
+                <input type="color" id="bd-color-custom" value="#1a1814" oninput="applyColor('birthday', this.value)">
+              </div>
+            </div>
+          </div>
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('birthday','justifyLeft')">⯇</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('birthday','justifyCenter')">☰</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('birthday','justifyRight')">⯈</button>
+        </div>
+        <div class="card-canvas" id="bd-canvas">
+          <div class="card-canvas-img" id="bd-canvas-img"></div>
+          <div class="card-canvas-empty-msg" id="bd-canvas-empty">尚未選擇賀卡圖片，請先於下方選擇一張圖片</div>
+          <div class="rte-body" id="bd-body" contenteditable="true"></div>
+        </div>
+        <div class="ph-chips">
+          <span class="ph-chip" onclick="insertPlaceholder('bd-body','{{姓名}}')">{{姓名}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('bd-body','{{部門}}')">{{部門}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('bd-body','{{工號}}')">{{工號}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('bd-body','{{生日}}')">{{生日}}</span>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <h3>目前使用中的賀卡圖片</h3>
+        <div class="card-preview-wrap" id="bd-img-preview">
+          <div class="card-preview-empty">尚未選擇賀卡圖片</div>
+        </div>
+        <div style="display:flex;gap:.6rem;margin-top:1rem">
+          <button class="btn-sm btn-danger" onclick="removeCardImage('birthday')">清除目前圖片（不寄送圖片）</button>
+        </div>
+        <div class="config-hint" id="bd-img-status"></div>
+      </div>
+
+      <div class="config-card">
+        <h3>圖庫 <button class="btn-sm btn-secondary" style="float:right" onclick="loadImageLibrary('birthday')">🔄 重新整理</button></h3>
+        <div class="config-hint" style="margin:0 0 .75rem">顯示 Google Drive「員工生日賀卡圖片」資料夾中的所有圖片，點擊即可套用，也可直接在 Drive 裡新增/刪除圖片</div>
+        <div class="gallery-grid" id="bd-gallery"><div class="loading-wrap"><div class="spinner"></div><div>圖庫載入中…</div></div></div>
+      </div>
+
+      <div class="config-card">
+        <h3>上傳新圖片</h3>
+        <div class="upload-zone" id="bd-upload-zone" onclick="document.getElementById('bd-img-input').click()">
+          <div style="font-size:1.8rem">📤</div>
+          <p>點擊選擇圖片，或將圖片拖曳到此處<br>建議尺寸 1280×720px（16:9），支援 JPG / PNG，上傳後會自動加入上方圖庫並設為使用中</p>
+          <input type="file" id="bd-img-input" accept="image/*" onchange="handleImageSelect('birthday', this.files)">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+        <button class="btn-sm btn-primary" onclick="saveCardContent('birthday')">💾 儲存內文設定</button>
+        <button class="btn-sm btn-secondary" onclick="testRenderCard('birthday')">🔧 測試圖片合成</button>
+        <button class="btn-sm btn-secondary" onclick="cleanupContent('birthday')">🧹 清理內文格式</button>
+        <span class="config-hint" id="bd-cc-status"></span>
+      </div>
+      <div id="bd-render-result" style="margin-top:1rem"></div>
+    </div>
+
+    <!-- ── 週年賀卡管理 ── -->
+    <div id="tab-card-anniversary" class="tab-content">
+      <div class="page-title">週年賀卡管理</div>
+      <div class="page-sub">上傳/選擇圖片並編寫主旨與內文，圖片庫獨立存放於 Google Drive「員工到職週年賀卡圖片」資料夾</div>
+      <div class="config-card">
+        <h3>主旨</h3>
+        <input type="text" id="an-subject" placeholder="例如：🎊 {{姓名}}，感謝您服務滿 {{年資}} 週年！">
+        <div class="ph-chips">
+          <span class="ph-chip" onclick="insertPlaceholder('an-subject','{{姓名}}')">{{姓名}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('an-subject','{{部門}}')">{{部門}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('an-subject','{{工號}}')">{{工號}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('an-subject','{{到職日}}')">{{到職日}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('an-subject','{{年資}}')">{{年資}}</span>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <h3>內文（直接寫在賀卡圖片上）</h3>
+        <div class="config-hint" style="margin:0 0 .75rem">底圖為下方目前使用中的圖片，文字會直接疊在圖片上。寄送時後端會把圖片與內文合成成一張圖片再寄出，確保 Outlook 等所有信箱都能正確顯示疊圖效果，跟這裡看到的一致</div>
+        <div class="rte-toolbar">
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('anniversary','bold')"><b>B</b></button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('anniversary','italic')"><i>I</i></button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('anniversary','underline')"><u>U</u></button>
+          <div class="fontsize-input-wrap" title="字級（點選數字直接輸入，跟一般文書軟體一樣）">
+            <input type="number" class="rte-fontsize" id="an-fontsize" min="6" max="96" step="1" value="14"
+                   onchange="applyFontSize('anniversary', this.value)"
+                   onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }">
+            <span class="fontsize-unit">pt</span>
+          </div>
+          <div class="fontsize-input-wrap" title="行高（游標所在這一行的行距倍數，空白行也適用；不選文字、只把游標移到該行即可套用）">
+            <input type="number" class="rte-fontsize" id="an-lineheight" min="1" max="3" step="0.1" value="1.5"
+                   onchange="applyLineHeight('anniversary', this.value)"
+                   onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }">
+            <span class="fontsize-unit">行高</span>
+          </div>
+          <div class="color-picker-wrap">
+            <button type="button" class="color-btn" onmousedown="event.preventDefault()" onclick="toggleColorPalette('anniversary', event)" title="文字顏色">
+              <span class="color-btn-swatch" id="an-color-swatch" style="background:#1a1814"></span>顏色
+            </button>
+            <div class="color-palette" id="an-color-palette">
+              <div class="color-swatch-grid" id="an-color-grid"></div>
+              <div class="color-palette-custom">
+                <span>自訂顏色</span>
+                <input type="color" id="an-color-custom" value="#1a1814" oninput="applyColor('anniversary', this.value)">
+              </div>
+            </div>
+          </div>
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('anniversary','justifyLeft')">⯇</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('anniversary','justifyCenter')">☰</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="rteExec('anniversary','justifyRight')">⯈</button>
+        </div>
+        <div class="card-canvas" id="an-canvas">
+          <div class="card-canvas-img" id="an-canvas-img"></div>
+          <div class="card-canvas-empty-msg" id="an-canvas-empty">尚未選擇賀卡圖片，請先於下方選擇一張圖片</div>
+          <div class="rte-body" id="an-body" contenteditable="true"></div>
+        </div>
+        <div class="ph-chips">
+          <span class="ph-chip" onclick="insertPlaceholder('an-body','{{姓名}}')">{{姓名}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('an-body','{{部門}}')">{{部門}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('an-body','{{工號}}')">{{工號}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('an-body','{{到職日}}')">{{到職日}}</span>
+          <span class="ph-chip" onclick="insertPlaceholder('an-body','{{年資}}')">{{年資}}</span>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <h3>目前使用中的賀卡圖片</h3>
+        <div class="card-preview-wrap" id="an-img-preview">
+          <div class="card-preview-empty">尚未選擇賀卡圖片</div>
+        </div>
+        <div style="display:flex;gap:.6rem;margin-top:1rem">
+          <button class="btn-sm btn-danger" onclick="removeCardImage('anniversary')">清除目前圖片（不寄送圖片）</button>
+        </div>
+        <div class="config-hint" id="an-img-status"></div>
+      </div>
+
+      <div class="config-card">
+        <h3>圖庫 <button class="btn-sm btn-secondary" style="float:right" onclick="loadImageLibrary('anniversary')">🔄 重新整理</button></h3>
+        <div class="config-hint" style="margin:0 0 .75rem">顯示 Google Drive「員工到職週年賀卡圖片」資料夾中的所有圖片，點擊即可套用，也可直接在 Drive 裡新增/刪除圖片</div>
+        <div class="gallery-grid" id="an-gallery"><div class="loading-wrap"><div class="spinner"></div><div>圖庫載入中…</div></div></div>
+      </div>
+
+      <div class="config-card">
+        <h3>上傳新圖片</h3>
+        <div class="upload-zone" id="an-upload-zone" onclick="document.getElementById('an-img-input').click()">
+          <div style="font-size:1.8rem">📤</div>
+          <p>點擊選擇圖片，或將圖片拖曳到此處<br>建議尺寸 1280×720px（16:9），支援 JPG / PNG，上傳後會自動加入上方圖庫並設為使用中</p>
+          <input type="file" id="an-img-input" accept="image/*" onchange="handleImageSelect('anniversary', this.files)">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+        <button class="btn-sm btn-primary" onclick="saveCardContent('anniversary')">💾 儲存內文設定</button>
+        <button class="btn-sm btn-secondary" onclick="testRenderCard('anniversary')">🔧 測試圖片合成</button>
+        <button class="btn-sm btn-secondary" onclick="cleanupContent('anniversary')">🧹 清理內文格式</button>
+        <span class="config-hint" id="an-cc-status"></span>
+      </div>
+      <div id="an-render-result" style="margin-top:1rem"></div>
+    </div>
+
+    <!-- ── 賀卡寄送設定 ── -->
+    <div id="tab-card-sendsettings" class="tab-content">
+      <div class="page-title">賀卡寄送設定</div>
+      <div class="page-sub">設定生日賀卡與週年賀卡各自的自動寄送規則與密件副本收件人</div>
+
+      <div class="config-card">
+        <h3>🎂 生日賀卡寄送設定</h3>
+        <div class="config-row" style="align-items:flex-start">
+          <label>密件副本（BCC）</label>
+          <div style="flex:1;min-width:220px">
+            <div class="chip-list" id="bd-bcc-chips"></div>
+            <div class="chip-input-row">
+              <input type="email" id="bd-bcc-input" placeholder="輸入 Email 後按新增" onkeydown="if(event.key==='Enter'){event.preventDefault();addBcc('birthday');}">
+              <button class="btn-sm btn-primary" onclick="addBcc('birthday')">新增</button>
+            </div>
+          </div>
+        </div>
+        <div class="config-row">
+          <label>生日前幾天寄送</label>
+          <input type="number" id="bd-daysbefore" min="0" max="30" value="0" style="max-width:100px">
+          <span class="config-hint" style="margin:0">0 表示於生日當天寄送</span>
+        </div>
+        <div class="config-row">
+          <label>每日寄送時間</label>
+          <select id="bd-hour" style="max-width:140px"></select>
+          <span class="config-hint" style="margin:0">系統將於每日此時段自動檢查並寄送賀卡</span>
+        </div>
+        <div class="config-row">
+          <label>啟用自動寄送</label>
+          <div class="toggle-row">
+            <label class="toggle"><input type="checkbox" id="bd-enabled"><span class="toggle-slider"></span></label>
+            <span class="config-hint" id="bd-enabled-label" style="margin:0">停用中</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:.6rem;margin-top:.5rem">
+          <button class="btn-sm btn-primary" onclick="saveSendSettings('birthday')">💾 儲存設定</button>
+          <button class="btn-sm btn-secondary" onclick="runSendNow('birthday')">▶ 立即執行一次寄送檢查</button>
+        </div>
+        <div class="config-hint" id="bd-send-status" style="margin-top:.75rem"></div>
+      </div>
+
+      <div class="config-card">
+        <h3>🏆 週年賀卡寄送設定</h3>
+        <div class="config-row" style="align-items:flex-start">
+          <label>密件副本（BCC）</label>
+          <div style="flex:1;min-width:220px">
+            <div class="chip-list" id="an-bcc-chips"></div>
+            <div class="chip-input-row">
+              <input type="email" id="an-bcc-input" placeholder="輸入 Email 後按新增" onkeydown="if(event.key==='Enter'){event.preventDefault();addBcc('anniversary');}">
+              <button class="btn-sm btn-primary" onclick="addBcc('anniversary')">新增</button>
+            </div>
+          </div>
+        </div>
+        <div class="config-row">
+          <label>到職週年前幾天寄送</label>
+          <input type="number" id="an-daysbefore" min="0" max="30" value="0" style="max-width:100px">
+          <span class="config-hint" style="margin:0">0 表示於到職週年當天寄送</span>
+        </div>
+        <div class="config-row">
+          <label>每日寄送時間</label>
+          <select id="an-hour" style="max-width:140px"></select>
+          <span class="config-hint" style="margin:0">系統將於每日此時段自動檢查並寄送賀卡</span>
+        </div>
+        <div class="config-row">
+          <label>啟用自動寄送</label>
+          <div class="toggle-row">
+            <label class="toggle"><input type="checkbox" id="an-enabled"><span class="toggle-slider"></span></label>
+            <span class="config-hint" id="an-enabled-label" style="margin:0">停用中</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:.6rem;margin-top:.5rem">
+          <button class="btn-sm btn-primary" onclick="saveSendSettings('anniversary')">💾 儲存設定</button>
+          <button class="btn-sm btn-secondary" onclick="runSendNow('anniversary')">▶ 立即執行一次寄送檢查</button>
+        </div>
+        <div class="config-hint" id="an-send-status" style="margin-top:.75rem"></div>
+      </div>
+    </div>
+
+    <!-- ── 賀卡寄送紀錄 ── -->
+    <div id="tab-card-sendlog" class="tab-content">
+      <div class="page-title">賀卡寄送紀錄</div>
+      <div class="page-sub">已成功寄出的生日／週年賀卡歷史紀錄</div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3>紀錄列表 <span id="log-count" style="font-size:.8rem;font-weight:400;color:var(--ink3)"></span></h3>
+          <div class="table-actions">
+            <select class="filter-select" id="log-filter-year" onchange="renderFilteredSendLog()"></select>
+            <select class="filter-select" id="log-filter-month" onchange="renderFilteredSendLog()"></select>
+            <select class="filter-select" id="log-filter-day" onchange="renderFilteredSendLog()"></select>
+            <button class="btn-sm btn-secondary" onclick="loadSendLog()">🔄 重新整理</button>
+          </div>
+        </div>
+        <div id="log-table-wrap"><div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div></div>
+      </div>
+    </div>
     <!-- HR-ONLY-END -->
   </div>
 </div>
@@ -960,7 +1473,7 @@ tr:hover td{background:var(--paper)}
 
 /* ---------- Google 試算表後端設定（對應 Code.gs）---------- */
 const GS_CFG_KEY = 'hr_dash_gs_url';
-let GS_URL = (localStorage.getItem(GS_CFG_KEY) || 'https://script.google.com/macros/s/AKfycbyMIOOBQRQu1d0qACbmVLUbKyPLpqqhd2FQ_hQEKOebaMkqGaNN_lvjGEPZNf995KLi/exec').trim();
+let GS_URL = (localStorage.getItem(GS_CFG_KEY) || 'https://script.google.com/macros/s/AKfycbwEXtJiV9lVNEBZT0lYXkLsablEwntU4bAJPhMGlniwto0OQEz0EAXfRgQxmCJbJAJ96Q/exec').trim();
 
 /* ---------- 色彩（依 dataviz 規範：單一數列用品牌色，多數列用固定順序類別色，狀態用狀態色）---------- */
 const PALETTE = {
@@ -1458,48 +1971,6 @@ function resetDemoData(){
   document.getElementById('import-status').innerHTML = '<span style="color:var(--green)">已重置為示範資料</span>';
 }
 
-/* ---------- 資料來源設定 UI ---------- */
-function saveGSUrl(){
-  const v = document.getElementById('gs-url-input').value.trim();
-  GS_URL = v;
-  localStorage.setItem(GS_CFG_KEY, v);
-  document.getElementById('gs-url-status').innerHTML = v
-    ? '<span style="color:var(--green)">已儲存，下次登入／同步將使用此試算表</span>'
-    : '<span style="color:var(--ink3)">已清空，將使用本機示範資料</span>';
-  renderGSUrlDisplay();
-}
-function renderGSUrlDisplay(){
-  const el = document.getElementById('gs-url-display');
-  if(!el) return;
-  el.textContent = GS_URL || '（尚未設定，目前使用本機示範資料）';
-  const input = document.getElementById('gs-url-input');
-  if(input) input.value = GS_URL;
-}
-function testGSConnection(){
-  const status = document.getElementById('gs-url-status');
-  if(!GS_URL){ status.innerHTML = '<span style="color:var(--red)">請先輸入並儲存 Apps Script 網址</span>'; return; }
-  status.innerHTML = '<span style="color:var(--ink3)">連線測試中…</span>';
-  gsGet('getEmployees').then(d=>{
-    status.innerHTML = d.ok
-      ? `<span style="color:var(--green)">連線成功，試算表內有 ${d.list.length} 筆員工資料</span>`
-      : `<span style="color:var(--red)">連線失敗：${d.error||'未知錯誤'}</span>`;
-  }).catch(err=>{
-    status.innerHTML = `<span style="color:var(--red)">連線失敗：${err.message}</span>`;
-  });
-}
-function syncFromBackend(){
-  const status = document.getElementById('gs-url-status');
-  if(!GS_URL){ status.innerHTML = '<span style="color:var(--red)">請先設定 Apps Script 網址</span>'; return; }
-  status.innerHTML = '<span style="color:var(--ink3)">同步中…</span>';
-  loadEmployees(()=>{
-    loadOrgTree(()=>{
-      populateOrgFilters();
-      status.innerHTML = `<span style="color:var(--green)">已同步，目前共 ${EMPLOYEES.length} 筆員工資料</span>`;
-      refreshAccountsFromBackend(()=>{ renderAdminList(); });
-      renderAll();
-    });
-  });
-}
 function refreshAccountsFromBackend(cb){
   if(!GS_URL){ cb && cb(); return; }
   gsGet('getAccounts').then(d=>{
@@ -2284,6 +2755,10 @@ function enterApp(){
   if(navChartDownload) navChartDownload.style.display = currentUser.role==='admin' ? '' : 'none';
   const navNotify = document.getElementById('nav-notify');
   if(navNotify) navNotify.style.display = currentUser.role==='admin' ? '' : 'none';
+  // 「員工賀卡管理」整個群組（標題列＋其下 6 個子分頁）僅開放給人資管理員，
+  // 收合狀態下子項本來就不顯示，隱藏群組標題列即等同隱藏整區。
+  const navGroupCards = document.getElementById('nav-group-cards');
+  if(navGroupCards) navGroupCards.style.display = currentUser.role==='admin' ? '' : 'none';
 
   const asOf = new Date();
   document.getElementById('tb-asof').textContent = `資料基準日：${asOf.getFullYear()}/${pad2(asOf.getMonth()+1)}/${pad2(asOf.getDate())}`;
@@ -2436,15 +2911,38 @@ function orgChartGoToDepartment(code){
   renderAll();
 }
 
+/* 「員工賀卡管理」群組底下的分頁 id 清單：權限守衛、topbar 隱藏、側邊選單群組展開
+   三處都以這份清單為準，新增賀卡子分頁時只要改這裡。 */
+const CARD_TAB_IDS = ['tab-card-dashboard','tab-card-employees','tab-card-birthday','tab-card-anniversary','tab-card-sendsettings','tab-card-sendlog'];
+/* 僅限人資管理員可進入的分頁（非管理員一律導回總覽）。 */
+const ADMIN_ONLY_TAB_IDS = ['tab-admin','tab-chartdownload','tab-notify'].concat(CARD_TAB_IDS);
+
+/** 側邊選單主功能群組的單開手風琴：展開被點的群組、收合其他群組；再點一次已展開的則收合。 */
+function toggleNavGroup(headerId){
+  const header = document.getElementById(headerId);
+  if(!header) return;
+  const willExpand = !header.classList.contains('expanded');
+  document.querySelectorAll('.nav-group-header').forEach(h=>h.classList.remove('expanded'));
+  if(willExpand) header.classList.add('expanded');
+}
+
+/** 讓側邊選單群組的展開狀態與「目前實際顯示的分頁」保持一致（含程式內部切換分頁時）。 */
+function syncNavGroupToTab(tabId){
+  const targetId = CARD_TAB_IDS.indexOf(tabId) >= 0 ? 'nav-group-cards' : 'nav-group-hr';
+  document.querySelectorAll('.nav-group-header').forEach(h=>h.classList.toggle('expanded', h.id===targetId));
+}
+
 function switchTab(tabId){
-  if((tabId==='tab-admin' || tabId==='tab-chartdownload' || tabId==='tab-notify') && (!currentUser || currentUser.role!=='admin')) tabId='tab-overview';
+  if(ADMIN_ONLY_TAB_IDS.indexOf(tabId) >= 0 && (!currentUser || currentUser.role!=='admin')) tabId='tab-overview';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.tab===tabId));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active', c.id===tabId));
+  syncNavGroupToTab(tabId);
   // 「通知設定」「系統管理」這兩頁的內容（勾選寄送對象、帳號與試算表設定）都跟「組織範圍」
   // （事業部/部門篩選）完全無關，不需要依組織範圍篩選資料，上方整個組織範圍區塊在這兩頁沒有
-  // 意義，直接隱藏；其餘頁面維持顯示。
+  // 意義，直接隱藏；其餘頁面維持顯示。「員工賀卡管理」底下的分頁同理（賀卡寄送對象一律是
+  // 全公司在職員工，不受組織範圍篩選影響），一併隱藏。
   const topbarEl = document.querySelector('.topbar');
-  if(topbarEl) topbarEl.style.display = (tabId==='tab-notify' || tabId==='tab-admin') ? 'none' : '';
+  if(topbarEl) topbarEl.style.display = (tabId==='tab-notify' || tabId==='tab-admin' || CARD_TAB_IDS.indexOf(tabId) >= 0) ? 'none' : '';
   requestAnimationFrame(()=>renderAll());
 }
 
@@ -2471,8 +2969,18 @@ function renderAll(){
   if(activeTab==='tab-movement') renderMovement(stats);
   if(activeTab==='tab-care') renderCare(stats, asOf);
   if(activeTab==='tab-directory') renderDirectory();
-  if(activeTab==='tab-admin' && currentUser.role==='admin'){ renderAdminList(); renderFieldLegend(); renderGSUrlDisplay(); }
+  if(activeTab==='tab-admin' && currentUser.role==='admin'){ renderAdminList(); renderFieldLegend(); }
   if(activeTab==='tab-notify' && currentUser.role==='admin'){ renderNotifySettings(); }
+  // 「員工賀卡管理」各分頁的資料一律於切換到該分頁時才向後端讀取（比照通知設定／系統管理），
+  // 資料來源是賀卡專用的 action，跟上方組織範圍篩選無關。
+  if(currentUser.role==='admin'){
+    if(activeTab==='tab-card-dashboard') loadCardDashboard();
+    if(activeTab==='tab-card-employees') loadCardEmployees();
+    if(activeTab==='tab-card-birthday') loadCardManagement('birthday');
+    if(activeTab==='tab-card-anniversary') loadCardManagement('anniversary');
+    if(activeTab==='tab-card-sendsettings'){ loadSendSettings('birthday'); loadSendSettings('anniversary'); }
+    if(activeTab==='tab-card-sendlog') loadSendLog();
+  }
 }
 
 function renderKPI(stats){
@@ -4064,6 +4572,7 @@ async function captureChartImages(items){
 
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.tab===originalTab));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active', c.id===originalTab));
+  syncNavGroupToTab(originalTab);
   renderAll();
   return results;
 }
@@ -4540,6 +5049,1007 @@ function importCSVText(text){
     renderAll();
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   員工賀卡管理（由 card-admin.html 併入）
+
+   ‧ 所有後端呼叫一律走本檔既有的 gsGet(action, params) / gsPost(payload)，
+     使用同一個 GS_URL；card-admin.html 原本自帶的 GS_URL／CFG_KEY 一概不搬。
+   ‧ 後端 action 名稱一律加 Card 前綴（getCardEmployees / getCardStats 等），
+     避免與 Code.gs 既有的 getEmployees／stats 撞名。
+   ‧ 登入／Session、管理員帳號 CRUD、員工新增/編輯一律沿用本檔既有機制，
+     card-admin.html 那幾組平行實作（doLogin／saveAdmin／saveEmployee…）不搬。
+   ‧ 函式與全域變數凡與本檔既有名稱衝突者一律改名（loadEmployees→loadCardEmployees 等）。
+   ══════════════════════════════════════════════════════════════ */
+
+/* 零寬字元（U+200B）：空白行沒有文字可以套用字級／行高，改插入這個看不見的字元當標記，
+   讓空白行也能被選取、套用樣式；清理空殼標籤時必須把它視為「有意義的內容」保留下來。 */
+const CARD_ZWSP = '​';
+
+function cardEsc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* 儀表板的「近期生日/週年提醒」只需要顯示月/日，不用年份（年份只在後端排序時用來正確處理
+   跨年度的情況，例如 12 月底到 1 月初橫跨兩個年份時仍要照時間先後排序，顯示上把年份拿掉即可）*/
+function cardMmdd(dateStr){
+  if(!dateStr) return '';
+  const parts = String(dateStr).split('/');
+  return parts.length === 3 ? parts[1] + '/' + parts[2] : dateStr;
+}
+
+/** 賀卡後端寫入類 action 的成功判斷：Cards.gs 沿用 birthday.gs 的 {status:'ok'} 慣例，
+ *  這裡同時接受本檔既有 action 慣用的 {ok:true}，避免兩種回傳格式擇一時前端誤判失敗。 */
+function cardOk(res){ return !!res && (res.status === 'ok' || res.ok === true); }
+function cardErrMsg(res){ return (res && (res.message || res.error)) || ''; }
+
+/** 賀卡分頁的 DOM id 前綴：birthday→bd、anniversary→an（兩種賀卡共用同一組函式）。 */
+function cardPfx(type){ return type === 'anniversary' ? 'an' : 'bd'; }
+
+/* ── 賀卡儀表板 ── */
+let lastStatsCache = null; // 快取最近一次 stats 回應，切換「各月份生日人數」/「各星座人數統計」時不用重新打 API
+let dashBdView = 'month';  // 'month'（各月份生日人數）或 'zodiac'（各星座人數統計）
+
+function showCardDashSub(name){
+  document.querySelectorAll('.dash-sub').forEach(t=>t.classList.remove('active'));
+  document.getElementById('dash-sub-'+name).classList.add('active');
+  document.querySelectorAll('.dash-subnav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('dash-subnav-'+name).classList.add('active');
+}
+
+function toggleMonthZodiacView(){
+  dashBdView = dashBdView === 'month' ? 'zodiac' : 'month';
+  renderMonthOrZodiac();
+}
+
+function renderMonthOrZodiac(){
+  if(!lastStatsCache) return;
+  const s = lastStatsCache;
+  const titleEl = document.getElementById('bd-month-title');
+  const btnEl = document.getElementById('bd-month-toggle-btn');
+  const wrap = document.getElementById('bd-month-stats');
+  if(dashBdView === 'zodiac'){
+    titleEl.textContent = '各星座人數統計';
+    btnEl.textContent = '📅 各月份生日人數';
+    wrap.innerHTML = (s.zodiacStats||[]).map(z=>
+      `<div class="mini-stat-tile"><div class="mst-lbl">${cardEsc(z.name)}</div><div class="mst-val">${z.count}</div></div>`
+    ).join('');
+  } else {
+    titleEl.textContent = '各月份生日人數';
+    btnEl.textContent = '🔮 各星座人數統計';
+    const monthCounts = s.birthdayMonthCounts || new Array(12).fill(0);
+    const curMonth = new Date().getMonth() + 1;
+    wrap.innerHTML = monthCounts.map((c,i)=>
+      `<div class="mini-stat-tile${i+1===curMonth?' mst-current':''}"><div class="mst-lbl">${i+1} 月</div><div class="mst-val">${c}</div></div>`
+    ).join('');
+  }
+}
+
+let dashAnnivView = 'milestone'; // 'milestone'（今年滿週年人數統計）或 'tenure'（年資區間統計）
+
+function toggleMilestoneTenureView(){
+  dashAnnivView = dashAnnivView === 'milestone' ? 'tenure' : 'milestone';
+  renderMilestoneOrTenure();
+}
+
+function renderMilestoneOrTenure(){
+  if(!lastStatsCache) return;
+  const s = lastStatsCache;
+  const titleEl = document.getElementById('anniv-milestone-title');
+  const btnEl = document.getElementById('anniv-milestone-toggle-btn');
+  const wrap = document.getElementById('anniv-milestone-stats');
+  if(dashAnnivView === 'tenure'){
+    titleEl.textContent = '年資區間統計';
+    btnEl.textContent = '🏆 今年滿週年人數統計';
+    const tenureLabels = {
+      under1:'未滿 1 年', y1to3:'滿 1～3 年', y3to5:'滿 3～5 年',
+      y5to10:'滿 5～10 年', y10to20:'滿 10～20 年', over20:'滿 20 年以上'
+    };
+    wrap.innerHTML = (s.tenureRanges||[]).map(t=>
+      `<div class="mini-stat-tile"><div class="mst-lbl">${tenureLabels[t.key]||t.key}</div><div class="mst-val">${t.count}</div><div class="mst-sub mst-sub-red">${t.pct}%</div></div>`
+    ).join('');
+  } else {
+    titleEl.textContent = '今年滿週年人數統計';
+    btnEl.textContent = '📊 年資區間統計';
+    wrap.innerHTML = (s.milestoneCounts||[]).map(m=>
+      `<div class="mini-stat-tile${m.count>0?' mst-current':''}"><div class="mst-lbl">滿 ${m.years} 週年</div><div class="mst-val">${m.count}</div><div class="mst-sub">人</div></div>`
+    ).join('');
+  }
+}
+
+function loadCardDashboard(){
+  document.getElementById('dash-updated').textContent = '載入中…';
+  gsGet('getCardStats')
+    .then(s=>{
+      document.getElementById('dash-updated').textContent = '最後更新：' + new Date().toLocaleString('zh-TW');
+      document.getElementById('st-total').textContent = s.totalEmployees ?? '—';
+      document.getElementById('st-upcoming').textContent = s.upcomingCount ?? '—';
+      document.getElementById('st-sent').textContent = s.sentThisYear ?? '—';
+      const schEl = document.getElementById('st-schedule');
+      schEl.textContent = s.scheduleEnabled ? '啟用中' : '未啟用';
+      schEl.className = 'sc-val ' + (s.scheduleEnabled ? 'green' : 'red');
+
+      const wrap = document.getElementById('dash-upcoming');
+      if(!s.upcoming || !s.upcoming.length){
+        wrap.innerHTML = '<div class="table-empty">未來 30 天內沒有員工生日</div>';
+      } else {
+        let html = '<div class="table-scroll"><table class="dash-table"><thead><tr><th>部門</th><th>工號</th><th>姓名</th><th>生日</th><th>今年狀態</th></tr></thead><tbody>';
+        s.upcoming.forEach(e=>{
+          html += `<tr><td>${cardEsc(e.dept)}</td><td>${cardEsc(e.empId)}</td><td>${cardEsc(e.name)}</td><td>${cardEsc(cardMmdd(e.nextBirthday))}</td>`+
+                  `<td>${e.sentThisYear ? '<span class="badge pass">已寄送</span>' : '<span class="badge wait">等待中</span>'}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        wrap.innerHTML = html;
+      }
+
+      document.getElementById('st-anniv-total').textContent = s.totalEmployees ?? '—';
+      document.getElementById('st-anniv-upcoming').textContent = s.anniversaryUpcomingCount ?? '—';
+      document.getElementById('st-anniv-sent').textContent = s.anniversarySentThisYear ?? '—';
+      const aSchEl = document.getElementById('st-anniv-schedule');
+      aSchEl.textContent = s.anniversaryScheduleEnabled ? '啟用中' : '未啟用';
+      aSchEl.className = 'sc-val ' + (s.anniversaryScheduleEnabled ? 'green' : 'red');
+
+      const aWrap = document.getElementById('dash-anniv-upcoming');
+      if(!s.anniversaryUpcoming || !s.anniversaryUpcoming.length){
+        aWrap.innerHTML = '<div class="table-empty">未來 30 天內沒有到職週年</div>';
+      } else {
+        let ahtml = '<div class="table-scroll"><table class="dash-table"><thead><tr><th>部門</th><th>工號</th><th>姓名</th><th>週年日期</th><th>年資</th><th>今年狀態</th></tr></thead><tbody>';
+        s.anniversaryUpcoming.forEach(e=>{
+          ahtml += `<tr><td>${cardEsc(e.dept)}</td><td>${cardEsc(e.empId)}</td><td>${cardEsc(e.name)}</td><td>${cardEsc(cardMmdd(e.nextAnniversary))}</td><td>${cardEsc(e.yearsOfService)} 週年</td>`+
+                   `<td>${e.anniversarySentThisYear ? '<span class="badge pass">已寄送</span>' : '<span class="badge wait">等待中</span>'}</td></tr>`;
+        });
+        ahtml += '</tbody></table></div>';
+        aWrap.innerHTML = ahtml;
+      }
+
+      lastStatsCache = s;
+      renderMonthOrZodiac();
+      renderMilestoneOrTenure();
+    })
+    .catch(()=>{ document.getElementById('dash-updated').textContent = '⚠️ 無法連線，請確認「系統管理」頁的 Apps Script 網址設定是否正確'; });
+}
+
+/* ── 賀卡員工資料（僅顯示在職員工的寄送狀態；新增/編輯改用系統管理的 CSV 匯入）── */
+let cardEmployeesData = [];
+let cardEmpSortField = null, cardEmpSortDir = 1;
+
+function loadCardEmployees(){
+  document.getElementById('emp-table-wrap').innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div>';
+  gsGet('getCardEmployees')
+    .then(res=>{
+      cardEmployeesData = Array.isArray(res) ? res : (res.employees || res.list || []);
+      document.getElementById('emp-count').textContent = `共 ${cardEmployeesData.length} 筆`;
+      renderCardEmployees(cardEmployeesData);
+    })
+    .catch(()=>{ document.getElementById('emp-table-wrap').innerHTML = '<div class="table-empty">⚠️ 資料載入失敗</div>'; });
+}
+
+function sortCardTh(label, field){
+  const arrow = cardEmpSortField===field ? (cardEmpSortDir===1?'▲':'▼') : '<span class="sort-icon-idle">⇅</span>';
+  return `<th class="sortable-th" onclick="sortCardEmployees('${field}')">${label} <span class="sort-icon">${arrow}</span></th>`;
+}
+
+function sortCardEmployees(field){
+  cardEmpSortDir = (cardEmpSortField === field) ? -cardEmpSortDir : 1;
+  cardEmpSortField = field;
+  filterCardEmployees();
+}
+
+function cardEmpCompare(a, b, field){
+  if(field === 'completedYears'){
+    const va = a.completedYears ?? -Infinity;
+    const vb = b.completedYears ?? -Infinity;
+    return va - vb;
+  }
+  const va = String(a[field] ?? '');
+  const vb = String(b[field] ?? '');
+  return va.localeCompare(vb, 'zh-Hant', {numeric:true});
+}
+
+function renderCardEmployees(list){
+  const wrap = document.getElementById('emp-table-wrap');
+  if(!list.length){ wrap.innerHTML = '<div class="table-empty">目前沒有在職員工資料，請至「系統管理 → 資料匯入」匯入員工 CSV</div>'; return; }
+  let sorted = list;
+  if(cardEmpSortField){
+    sorted = list.slice().sort((a,b)=>cardEmpCompare(a,b,cardEmpSortField) * cardEmpSortDir);
+  }
+  let html = '<div class="table-scroll"><table class="emp-table"><thead><tr>'+
+    sortCardTh('部門','dept')+sortCardTh('工號','empId')+sortCardTh('姓名','name')+sortCardTh('生日','birthday')+sortCardTh('到職日','hireDate')+sortCardTh('年資','completedYears')+
+    '<th>Email</th><th>生日狀態</th><th>週年狀態</th><th>操作</th></tr></thead><tbody>';
+  sorted.forEach(e=>{
+    html += `<tr><td>${cardEsc(e.dept)}</td><td>${cardEsc(e.empId)}</td><td>${cardEsc(e.name)}</td><td>${cardEsc(e.birthday)}</td>`+
+            `<td>${cardEsc(e.hireDate)||'—'}</td><td>${e.completedYears!=null ? cardEsc(e.completedYears)+' 年' : '—'}</td><td>${cardEsc(e.email)}</td>`+
+            `<td>${e.sentThisYear ? '<span class="badge pass">已寄送</span>' : '<span class="badge wait">未寄送</span>'}</td>`+
+            `<td>${e.hireDate ? (e.anniversarySentThisYear ? '<span class="badge pass">已寄送</span>' : '<span class="badge wait">未寄送</span>') : '—'}</td>`+
+            `<td><button class="btn-sm btn-secondary" onclick="sendTestCard('${cardEsc(e.empId)}','birthday')">✉ 生日測試</button> `+
+            `<button class="btn-sm btn-secondary" onclick="sendTestCard('${cardEsc(e.empId)}','anniversary')">✉ 週年測試</button></td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
+}
+
+function filterCardEmployees(){
+  const kw = document.getElementById('emp-search').value.trim().toLowerCase();
+  const st = document.getElementById('emp-filter').value;
+  let list = cardEmployeesData.filter(e=>{
+    const matchKw = !kw || [e.dept,e.empId,e.name].some(v=>String(v).toLowerCase().includes(kw));
+    const matchSt = !st || (st==='sent' ? e.sentThisYear : !e.sentThisYear);
+    return matchKw && matchSt;
+  });
+  renderCardEmployees(list);
+}
+
+function sendTestCard(empId, cardType){
+  const label = cardType === 'anniversary' ? '週年賀卡' : '生日賀卡';
+  if(!confirm(`確定要寄送一封測試${label}給工號 ${empId} 的員工嗎？`)) return;
+  gsPost({ action:'sendTestCard', cardType, empId })
+    .then(res=>{ alert(cardOk(res) ? `✅ 測試${label}已寄出` : ('⚠️ ' + (cardErrMsg(res)||'寄送失敗'))); })
+    .catch(()=>alert('⚠️ 連線失敗'));
+}
+
+/* ── 賀卡圖檔管理 ＋ 內文管理（birthday / anniversary 共用）── */
+let cardState = {
+  birthday:    { fileId:'', imageUrl:'', subject:'', bodyHtml:'' },
+  anniversary: { fileId:'', imageUrl:'', subject:'', bodyHtml:'' }
+};
+let imageLibraries = { birthday: [], anniversary: [] };
+let uploadedImage   = { birthday: null, anniversary: null };
+let bccEmailsState  = { birthday: [], anniversary: [] };
+let savedRanges     = { birthday: null, anniversary: null };
+
+function loadCardManagement(type){
+  loadCardSettings(type);
+  loadImageLibrary(type);
+}
+
+function loadCardSettings(type){
+  gsGet('getCardSettings', {cardType:type})
+    .then(c=>{
+      cardState[type] = c || { fileId:'', imageUrl:'', subject:'', bodyHtml:'' };
+      renderCardImagePreview(type, cardState[type].imageUrl);
+      document.getElementById(cardPfx(type)+'-subject').value = cardState[type].subject || '';
+      document.getElementById(cardPfx(type)+'-body').innerHTML = cardState[type].bodyHtml || '';
+    })
+    .catch(()=>{ document.getElementById(cardPfx(type)+'-img-status').textContent = '⚠️ 賀卡設定載入失敗'; });
+}
+
+function renderCardImagePreview(type, url){
+  const wrap = document.getElementById(cardPfx(type)+'-img-preview');
+  wrap.innerHTML = url ? `<img src="${cardEsc(url)}" alt="賀卡圖片">` : '<div class="card-preview-empty">尚未選擇賀卡圖片</div>';
+  updateCanvasBackground(type, url);
+}
+
+function updateCanvasBackground(type, url){
+  const canvas = document.getElementById(cardPfx(type)+'-canvas');
+  const img = document.getElementById(cardPfx(type)+'-canvas-img');
+  if(!canvas || !img) return;
+  img.style.backgroundImage = url ? `url("${url}")` : '';
+  canvas.classList.toggle('empty', !url);
+}
+
+function handleImageSelect(type, files){
+  if(!files || !files.length) return;
+  const file = files[0];
+  if(!file.type.startsWith('image/')){ alert('請選擇圖片檔案'); return; }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const base64 = reader.result.split(',')[1];
+    uploadedImage[type] = { base64, mime: file.type, name: file.name };
+    renderCardImagePreview(type, reader.result);
+    uploadCardImageNow(type);
+  };
+  reader.readAsDataURL(file);
+}
+
+function uploadCardImageNow(type){
+  const info = uploadedImage[type];
+  if(!info) return;
+  const statusEl = document.getElementById(cardPfx(type)+'-img-status');
+  statusEl.textContent = '上傳中…';
+  gsPost({ action:'uploadCardImage', cardType:type, base64: info.base64, mimeType: info.mime, filename: info.name })
+    .then(res=>{
+      if(cardOk(res)){
+        statusEl.textContent = '✅ 圖片已上傳並設為使用中';
+        cardState[type].imageUrl = res.imageUrl; cardState[type].fileId = res.fileId;
+        loadImageLibrary(type);
+      } else {
+        statusEl.textContent = '⚠️ 上傳失敗：' + cardErrMsg(res);
+      }
+    })
+    .catch(()=>{ statusEl.textContent = '⚠️ 上傳失敗，請確認連線'; });
+}
+
+function removeCardImage(type){
+  if(!confirm('確定要清除目前使用中的賀卡圖片嗎？（圖庫內的圖片不會被刪除）')) return;
+  gsPost({ action:'removeCardImage', cardType:type })
+    .then(res=>{
+      if(cardOk(res)){
+        renderCardImagePreview(type, ''); cardState[type].fileId=''; cardState[type].imageUrl='';
+        document.getElementById(cardPfx(type)+'-img-status').textContent='✅ 已清除';
+        renderGalleries(type);
+      }
+    });
+}
+
+/* ── 圖庫（即時讀取 Google Drive 資料夾）── */
+function loadImageLibrary(type){
+  document.getElementById(cardPfx(type)+'-gallery').innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div>圖庫載入中…</div></div>';
+  gsGet('getCardImageLibrary', {cardType:type})
+    .then(res=>{
+      imageLibraries[type] = Array.isArray(res) ? res : (res.library || []);
+      renderGalleries(type);
+    })
+    .catch(()=>{ document.getElementById(cardPfx(type)+'-gallery').innerHTML = '<div class="config-hint" style="margin:0">⚠️ 圖庫載入失敗</div>'; });
+}
+
+function renderGalleries(type){
+  const activeId = cardState[type].fileId;
+  const wrap = document.getElementById(cardPfx(type)+'-gallery');
+  const lib = imageLibraries[type];
+  if(!lib.length){ wrap.innerHTML = '<div class="config-hint" style="margin:0">圖庫是空的，請先上傳一張圖片</div>'; return; }
+  wrap.innerHTML = lib.map(item=>`
+    <div class="gallery-item ${String(item.fileId)===String(activeId)?'active':''}" onclick="selectTemplateImage('${type}','${cardEsc(item.fileId)}')">
+      ${String(item.fileId)===String(activeId) ? '<span class="gi-badge">使用中</span>' : ''}
+      <span class="gi-del" onclick="deleteGalleryImage(event,'${type}','${cardEsc(item.fileId)}')">✕</span>
+      <img src="${cardEsc(item.imageUrl)}" alt="${cardEsc(item.name)}" loading="lazy">
+      <div class="gi-name">${cardEsc(item.name)}</div>
+    </div>`).join('');
+}
+
+function selectTemplateImage(type, fileId){
+  gsPost({ action:'selectCardImage', cardType:type, fileId })
+    .then(res=>{
+      if(!cardOk(res)){ alert('⚠️ ' + (cardErrMsg(res)||'選擇失敗')); return; }
+      const item = imageLibraries[type].find(i=>String(i.fileId)===String(fileId));
+      if(item){ cardState[type].fileId = item.fileId; cardState[type].imageUrl = item.imageUrl; }
+      renderCardImagePreview(type, cardState[type].imageUrl);
+      document.getElementById(cardPfx(type)+'-img-status').textContent = '✅ 已套用「' + (item ? item.name : '') + '」';
+      renderGalleries(type);
+    });
+}
+
+function deleteGalleryImage(event, type, fileId){
+  event.stopPropagation();
+  if(!confirm('確定要從圖庫永久刪除這張圖片嗎？')) return;
+  gsPost({ action:'deleteCardLibraryImage', cardType:type, fileId })
+    .then(res=>{
+      if(!cardOk(res)){ alert('⚠️ ' + (cardErrMsg(res)||'刪除失敗')); return; }
+      if(String(cardState[type].fileId)===String(fileId)){
+        cardState[type].fileId=''; cardState[type].imageUrl='';
+        renderCardImagePreview(type, '');
+      }
+      loadImageLibrary(type);
+    });
+}
+
+/* ── 賀卡內文管理（富文字工具列，birthday / anniversary 共用）── */
+function rteExec(type, cmd, val){
+  const body = document.getElementById(cardPfx(type)+'-body');
+  body.focus();
+  if(savedRanges[type]){
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRanges[type]);
+  }
+  document.execCommand(cmd, false, val || null);
+  const sel2 = window.getSelection();
+  if(sel2.rangeCount) savedRanges[type] = sel2.getRangeAt(0);
+}
+
+/* ── 顏色色塊選取器 ── */
+const COLOR_SWATCHES = [
+  '#1a1814','#3d3a34','#7a7570','#ffffff',
+  '#8b2020','#F47920','#c9a227','#1a7a3a',
+  '#1a5fa8','#6a4c93','#c23b7a','#8b5a2b'
+];
+
+function toggleColorPalette(type, event){
+  event.stopPropagation();
+  document.getElementById(cardPfx(type)+'-color-palette').classList.toggle('open');
+}
+
+// 讀取游標目前所在位置的實際字級／行高，同步顯示在工具列的輸入框上
+function updateToolbarFromCursor(type){
+  const body = document.getElementById(cardPfx(type)+'-body');
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  if(!body.contains(range.startContainer)) return;
+
+  const node = range.startContainer.nodeType === Node.TEXT_NODE ? range.startContainer.parentElement : range.startContainer;
+  if(!node || !body.contains(node)) return;
+  const cs = getComputedStyle(node);
+
+  const fsInput = document.getElementById(cardPfx(type)+'-fontsize');
+  const fsPx = parseFloat(cs.fontSize);
+  if(fsInput && !isNaN(fsPx)) fsInput.value = Math.round(fsPx);
+
+  // CSS 不帶單位的行高是「倍數」，瀏覽器算出來的 computedStyle 卻是換算後的絕對像素，
+  // 沒辦法直接讀出原本設定的倍數。但因為倍數是往下繼承、每個節點各自用自己的字級去算，
+  // 所以「這個節點算出來的行高像素 ÷ 這個節點自己的字級像素」一定會等於原本設定的倍數，
+  // 不管游標在整行裡的哪個字級大小的文字上，換算回來都會是同一個正確的行高倍數
+  const lhInput = document.getElementById(cardPfx(type)+'-lineheight');
+  const lhPx = parseFloat(cs.lineHeight);
+  if(lhInput && !isNaN(lhPx) && !isNaN(fsPx) && fsPx > 0){
+    lhInput.value = Math.round((lhPx / fsPx) * 10) / 10;
+  }
+}
+
+// 每次調整字級／行高／顏色，都是「清掉舊樣式、往外面再包一層新的」，但舊的包裝標籤
+// 本身（例如 <span style="font-size:...">）並不會被移除，只是樣式變成空的、繼續留在
+// DOM 裡面。反覆調整同一段文字很多次之後，這些空殼標籤會一層層疊加、越疊越深，不只讓
+// 內文的 HTML 變得又大又亂，這些「有標籤但沒有真正文字內容」的空殼在瀏覽器排版時也可能
+// 佔用非預期的行高空間，導致編輯畫面看到的文字位置跟後端合成結果對不起來。這裡在每次
+// 套用格式之後都清掉真正空的標籤，避免繼續累積
+//
+// 判斷「空殼」不能只看有沒有子節點：使用者刪除可見文字時，常常會留下只剩 &nbsp;／空白字元
+// 的標籤（例如原本用來排版的一長串 &nbsp; 縮排，文字刪掉了、空白卻還在），這種標籤實際上
+// 也已經沒有意義；但空白行用的隱形字元標記（U+200B）跟 <br> 都是有意義的內容，絕對不能清掉
+function isPrunableShell(el){
+  if(el.querySelector('br')) return false;
+  const text = el.textContent;
+  if(text.indexOf(CARD_ZWSP) !== -1) return false; // 空白行的隱形標記字元，保留
+  return text.replace(/[\s ]/g, '') === ''; // 只剩空白／&nbsp;，視為空殼
+}
+
+function pruneEmptyElements(root){
+  let removedAny = true;
+  while(removedAny){
+    removedAny = false;
+    root.querySelectorAll('span, font').forEach(el => {
+      if(el.isConnected && isPrunableShell(el)){
+        el.remove();
+        removedAny = true;
+      }
+    });
+  }
+}
+
+// 直接把選取範圍包成一個 <span style="...">，取代 execCommand('foreColor')。
+// execCommand 在這裡不穩定：顏色可能被瀏覽器轉成 rgb(...) 格式，導致後端合成圖片時的正則
+// 解析不到、顏色掉回預設黑色。手動包 span 才能確保這裡看到的樣式跟寄出的圖片一致
+// 找出游標所在「這一行」的範圍：用瀏覽器原生的 selection.modify(...,'lineboundary') 移到
+// 本行行首/行尾。之所以不用「往上找最近的區塊元素」判斷，是因為 contenteditable 裡的空白行
+// 不一定會是獨立的一個 <div>——很常見的情況是同一個區塊裡兩個相鄰的 <br>（例如
+// <div>Hello<br><br>World</div>），這種情況用區塊層級判斷會誤以為這一行「還有文字」
+// （因為抓到的是整個 Hello/World 都在內的區塊），導致明明游標在空白行、卻跳出「請先選取文字」
+// 的錯誤訊息。改用視覺行的行首/行尾邊界，不管空白行是獨立區塊還是 <br><br>，都能正確判斷
+function getLineBoundaryRange(range, sel){
+  const caret = range.cloneRange();
+  caret.collapse(true);
+
+  sel.removeAllRanges();
+  sel.addRange(caret.cloneRange());
+  sel.modify('move', 'backward', 'lineboundary');
+  const lineStart = sel.getRangeAt(0).cloneRange();
+
+  sel.removeAllRanges();
+  sel.addRange(caret.cloneRange());
+  sel.modify('move', 'forward', 'lineboundary');
+  const lineEnd = sel.getRangeAt(0).cloneRange();
+
+  const lineRange = document.createRange();
+  lineRange.setStart(lineStart.startContainer, lineStart.startOffset);
+  lineRange.setEnd(lineEnd.startContainer, lineEnd.startOffset);
+  return lineRange;
+}
+
+// 在指定範圍內找既有的看不見字元標記（先前調整空白行行距時插入的），只在這一行的範圍內找，
+// 避免同一個區塊裡有好幾個空白行時，誤用到別行的標記
+function findMarkerSpanInRange(lineRange){
+  const root = lineRange.commonAncestorContainer;
+  const walker = document.createTreeWalker(
+    root.nodeType === Node.TEXT_NODE ? root.parentNode : root,
+    NodeFilter.SHOW_TEXT,
+    { acceptNode(n){ return lineRange.intersectsNode(n) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; } }
+  );
+  let n;
+  while((n = walker.nextNode())){
+    if(n.nodeValue === CARD_ZWSP && n.parentElement && n.parentElement.tagName === 'SPAN'){
+      return n.parentElement;
+    }
+  }
+  return null;
+}
+
+function wrapSelectionStyle(type, styleProp, styleValue){
+  const body = document.getElementById(cardPfx(type)+'-body');
+  body.focus();
+  const sel = window.getSelection();
+  if(savedRanges[type]){
+    sel.removeAllRanges();
+    sel.addRange(savedRanges[type]);
+  }
+  if(!sel.rangeCount || sel.getRangeAt(0).collapsed || !body.contains(sel.getRangeAt(0).commonAncestorContainer)){
+    alert('請先選取要調整的文字');
+    return;
+  }
+  const range = sel.getRangeAt(0);
+  // 先清掉選取範圍裡舊的同類樣式再包新的一層，避免像顏色這種每次都直接疊加、
+  // 從不清除舊值的做法，反覆調整同一段文字後留下一堆巢狀的舊樣式空殼
+  const frag = range.extractContents();
+  stripInlineStyle(frag, styleProp);
+  const span = document.createElement('span');
+  span.style[styleProp] = styleValue;
+  span.appendChild(frag);
+  range.insertNode(span);
+  pruneEmptyElements(body);
+
+  sel.removeAllRanges();
+  const newRange = document.createRange();
+  newRange.selectNodeContents(span);
+  sel.addRange(newRange);
+  savedRanges[type] = newRange;
+}
+
+// 遞迴清掉範圍內所有節點既有的某個 inline 樣式（例如 font-size、line-height），保留其他樣式
+// （粗體/斜體/顏色/底線等）不動。這是「選字級要點兩次才生效」跟「全選＋空行時字級不會同步
+// 縮放」的根本原因：之前只在外層再包一層新的 span，選取範圍裡舊的、巢狀更深的樣式權重比新的
+// 外層高，所以視覺上看不出變化、或只有部分文字改變。先把舊樣式清乾淨，再統一套用新樣式，
+// 才能保證選取範圍（包含裡面的空白行）整段跟著一起變化
+function stripInlineStyle(node, prop){
+  if(node.nodeType === Node.ELEMENT_NODE){
+    if(node.style) node.style[prop] = '';
+    Array.from(node.childNodes).forEach(n => stripInlineStyle(n, prop));
+  }
+}
+
+function applyFontSize(type, val){
+  const px = parseInt(val, 10);
+  if(!px || px < 6 || px > 96) return;
+  const body = document.getElementById(cardPfx(type)+'-body');
+  body.focus();
+  const sel = window.getSelection();
+  if(savedRanges[type]){
+    sel.removeAllRanges();
+    sel.addRange(savedRanges[type]);
+  }
+  if(!sel.rangeCount || !body.contains(sel.getRangeAt(0).commonAncestorContainer)){
+    alert('請先選取要調整的文字，或將游標移到要調整的空白行');
+    return;
+  }
+  const range = sel.getRangeAt(0);
+
+  if(range.collapsed){
+    // 空白行沒有文字可選取：塞入（或重複使用既有的）看不見字元，讓這一行也能套用字級來調整行距
+    const lineRange = getLineBoundaryRange(range, sel);
+    if(lineRange.toString().replace(new RegExp(CARD_ZWSP, 'g'), '').trim() !== ''){
+      alert('請先選取要調整的文字，或將游標移到要調整的空白行');
+      return;
+    }
+    // getLineBoundaryRange 內部呼叫過 sel.modify()，游標已經被移動過，這裡要先移回原本的位置再插入
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    let markerSpan = findMarkerSpanInRange(lineRange);
+    if(markerSpan){
+      markerSpan.style.fontSize = px + 'px';
+    } else {
+      markerSpan = document.createElement('span');
+      markerSpan.style.fontSize = px + 'px';
+      markerSpan.appendChild(document.createTextNode(CARD_ZWSP));
+      range.insertNode(markerSpan);
+    }
+    // 把游標留在這個標記裡面（收合成定點，不是 null）：如果沒有留下有效的選取範圍，
+    // 使用者不重新點回編輯區、直接連續調整字級/行高時，就找不到「目前在哪一行」，
+    // 瀏覽器會退回用目前實際的選取狀態，常常已經跑掉、跳到最上面一行去
+    sel.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(markerSpan);
+    newRange.collapse(false);
+    sel.addRange(newRange);
+    savedRanges[type] = newRange;
+    return;
+  }
+
+  // 一般文字選取（可能橫跨多行、也可能包含空白行）：抽出選取內容、清掉舊字級後，整段統一包成新字級
+  const frag = range.extractContents();
+  stripInlineStyle(frag, 'fontSize');
+  const span = document.createElement('span');
+  span.style.fontSize = px + 'px';
+  span.appendChild(frag);
+  range.insertNode(span);
+  pruneEmptyElements(body);
+
+  sel.removeAllRanges();
+  const newRange = document.createRange();
+  newRange.selectNodeContents(span);
+  sel.addRange(newRange);
+  savedRanges[type] = newRange;
+}
+
+// 把目前的選取範圍擴大成「完整涵蓋的每一行」：不管是單純把游標移到某一行（沒有選取任何文字），
+// 還是拖曳選取了一段跨越多行的文字，都會擴大成從第一行行首到最後一行行尾。行高是「整行」的
+// 屬性（不像字級/顏色是針對選到的文字），所以套用行高時，不管游標/選取範圍落在行的哪個位置，
+// 都要以整行為準，空白行也才能被涵蓋進去
+function expandRangeToFullLines(range, sel){
+  const startCaret = range.cloneRange(); startCaret.collapse(true);
+  const endCaret = range.cloneRange(); endCaret.collapse(false);
+  const startLine = getLineBoundaryRange(startCaret, sel);
+  const endLine = getLineBoundaryRange(endCaret, sel);
+  const full = document.createRange();
+  full.setStart(startLine.startContainer, startLine.startOffset);
+  full.setEnd(endLine.endContainer, endLine.endOffset);
+  return full;
+}
+
+// CSS 的行高在「行內元素」上沒辦法真的把一行縮小：每個 line box 都會有一個基準高度，
+// 是從它所在的區塊自己的字型／行高算出來的（不管行內有沒有實際文字），行內的 <span> 只能讓
+// 這一行「變高」（蓋過基準高度），沒辦法讓它「變矮」（縮到基準高度以下）。這就是為什麼行高
+// 調大會生效、調小卻沒用。要能真的縮小，這一行本身必須是一個獨立的區塊（<div>），讓行高改
+// 用這個區塊自己的設定去計算基準高度。以下這組函式就是在做這件事：把游標／選取範圍所在的
+// 整行，轉成一個獨立的 <div style="line-height:...">，而不是像字級/顏色那樣包一個 <span>
+
+// 找出緊鄰在範圍邊界外、原本用來分隔這一行的 <br>
+function getAdjacentNode(container, offset, before){
+  if(container.nodeType === Node.TEXT_NODE){
+    return before ? (offset === 0 ? container.previousSibling : null)
+                  : (offset === container.length ? container.nextSibling : null);
+  }
+  return before ? (offset > 0 ? container.childNodes[offset - 1] : null)
+                : (container.childNodes[offset] || null);
+}
+
+function removeAdjacentLineBreak(range, before){
+  const container = before ? range.startContainer : range.endContainer;
+  const offset = before ? range.startOffset : range.endOffset;
+  const adjacent = getAdjacentNode(container, offset, before);
+  if(!adjacent || adjacent.nodeName !== 'BR') return;
+  // 如果這個緊鄰的 <br> 另一側還連著一個 <br>，代表這一對 <br><br> 其實是「相鄰那一行本身
+  // 是空白行」的邊界（空白行沒有文字，是用兩個相鄰的 <br> 夾出一行空白），不是單純用來
+  // 分隔前後內容的分隔符。這種情況不能刪，否則會把旁邊那整行空白行吃掉——這正是「調整
+  // 中間文字的行高，上面的空白行就消失一行」的成因
+  const neighbor = before ? adjacent.previousSibling : adjacent.nextSibling;
+  if(neighbor && neighbor.nodeName === 'BR') return;
+  adjacent.remove();
+}
+
+// 如果這段範圍剛好完整落在「先前套用行高時建立的那一個 <div>」裡面，直接回傳它，
+// 這樣重複調整同一行的行高只會更新原本的 div，不會一直往內疊加新的 div。
+// 游標在既有的行高 div 裡面時，getLineBoundaryRange 抓到的行範圍會落在 div「裡面」
+// （文字節點層級），而不是從 div 外面把整個 div 包住，所以要用往上找最近的行高 div 祖先
+// 來判斷，而不是直接比對 range 的 container/offset
+function getSoleWrappingLineHeightDiv(range){
+  function nearestLineHeightDiv(node){
+    let el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    while(el){
+      if(el.tagName === 'DIV' && el.style && el.style.lineHeight) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+  const startDiv = nearestLineHeightDiv(range.startContainer);
+  const endDiv = nearestLineHeightDiv(range.endContainer);
+  if(startDiv && startDiv === endDiv) return startDiv;
+  return null;
+}
+
+function applyLineHeight(type, val){
+  const lh = parseFloat(val);
+  if(!lh || lh < 0.5 || lh > 4) return;
+  const body = document.getElementById(cardPfx(type)+'-body');
+  body.focus();
+  const sel = window.getSelection();
+  if(savedRanges[type]){
+    sel.removeAllRanges();
+    sel.addRange(savedRanges[type]);
+  }
+  if(!sel.rangeCount || !body.contains(sel.getRangeAt(0).commonAncestorContainer)){
+    alert('請先將游標移到（或選取）要調整行高的那一行，空白行也可以');
+    return;
+  }
+  const range = sel.getRangeAt(0);
+  const fullRange = expandRangeToFullLines(range, sel);
+  // expandRangeToFullLines 內部呼叫過 sel.modify()，選取狀態已經被移動過，這裡要先還原
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  let targetDiv = getSoleWrappingLineHeightDiv(fullRange);
+  if(targetDiv){
+    targetDiv.style.lineHeight = lh;
+  } else {
+    // 這一行原本如果是用 <br> 跟前後行分隔，把緊鄰的 <br> 拿掉——等一下包成的 <div> 本身就會
+    // 自動換行，留著 <br> 反而會多插入一行空白
+    removeAdjacentLineBreak(fullRange, true);
+    removeAdjacentLineBreak(fullRange, false);
+
+    targetDiv = document.createElement('div');
+    targetDiv.style.lineHeight = lh;
+    if(fullRange.collapsed){
+      targetDiv.appendChild(document.createTextNode(CARD_ZWSP));
+    } else {
+      const frag = fullRange.extractContents();
+      stripInlineStyle(frag, 'lineHeight');
+      targetDiv.appendChild(frag);
+    }
+    fullRange.insertNode(targetDiv);
+  }
+  pruneEmptyElements(body);
+
+  // 把游標收合成定點，留在「這次實際處理的這一行」（fullRange）結尾，不要設成 null：如果
+  // 沒有留下有效的選取範圍，使用者不重新點回編輯區、直接連續調整行高時，就找不到「目前在
+  // 哪一行」，會退回用當下實際的選取狀態，導致游標跳走。這裡刻意用 fullRange（這一行的範圍）
+  // 收合，而不是用 targetDiv 的範圍收合——如果這一行原本就屬於「先前套用行高時建立、涵蓋
+  // 好幾行」的既有 div（游標在最上面那一行、但那個 div 其實一路包到最後一行），用 targetDiv
+  // 收合會直接跳到整個 div 最後一行的結尾，也就是使用者回報的「游標自動跳到最後一個字」
+  sel.removeAllRanges();
+  const newRange = fullRange.cloneRange();
+  newRange.collapse(false);
+  sel.addRange(newRange);
+  savedRanges[type] = newRange;
+}
+
+function applyColor(type, hex){
+  wrapSelectionStyle(type, 'color', hex);
+  document.getElementById(cardPfx(type)+'-color-swatch').style.background = hex;
+  document.getElementById(cardPfx(type)+'-color-custom').value = hex;
+  document.getElementById(cardPfx(type)+'-color-palette').classList.remove('open');
+}
+
+function insertPlaceholder(targetId, text){
+  const el = document.getElementById(targetId);
+  if(el.tagName === 'INPUT'){
+    const start = el.selectionStart ?? el.value.length, end = el.selectionEnd ?? el.value.length;
+    el.value = el.value.slice(0,start) + text + el.value.slice(end);
+    el.focus();
+  } else {
+    el.focus();
+    document.execCommand('insertText', false, text);
+  }
+}
+
+function saveCardContent(type){
+  const subject = document.getElementById(cardPfx(type)+'-subject').value.trim();
+  const bodyHtml = document.getElementById(cardPfx(type)+'-body').innerHTML;
+  const statusEl = document.getElementById(cardPfx(type)+'-cc-status');
+  statusEl.textContent = '儲存中…';
+  gsPost({ action:'saveCardSettings', cardType:type, subject, bodyHtml })
+    .then(res=>{ statusEl.textContent = cardOk(res) ? '✅ 已儲存' : '⚠️ 儲存失敗'; setTimeout(()=>statusEl.textContent='',3000); })
+    .catch(()=>{ statusEl.textContent = '⚠️ 連線失敗'; });
+}
+
+function testRenderCard(type){
+  const resultEl = document.getElementById(cardPfx(type)+'-render-result');
+  resultEl.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div>正在測試圖片合成…</div></div>';
+  const subject = document.getElementById(cardPfx(type)+'-subject').value.trim();
+  const bodyHtml = document.getElementById(cardPfx(type)+'-body').innerHTML;
+  // 先儲存目前編輯中的內容，確保測試的是最新版本
+  gsPost({ action:'saveCardSettings', cardType:type, subject, bodyHtml })
+    .then(()=> gsPost({ action:'testRenderCard', cardType:type }))
+    .then(res=>{
+      if(cardOk(res)){
+        const sizeInfo = res.pixelSize ? `（圖片實際像素尺寸：${res.pixelSize.width} × ${res.pixelSize.height}，比例 ${(res.pixelSize.width/res.pixelSize.height).toFixed(3)}，正常應該接近 16:9＝1.778）` : '（無法讀取圖片實際像素尺寸）';
+        const debugRows = (res.lineDebug||[]).map(function(d){
+          return `<tr><td>${d.line}</td><td>${cardEsc(d.text)}</td><td>${d.y}</td><td>${d.height}</td><td>${d.fontSize}</td><td>${d.lineHeight}</td></tr>`;
+        }).join('');
+        const debugTable = debugRows ? `
+          <details style="margin-top:.75rem">
+            <summary style="cursor:pointer;font-size:.8rem;color:var(--ink2)">🔍 每行渲染診斷資料（比對編輯畫面用）</summary>
+            <div style="overflow-x:auto;margin-top:.5rem">
+              <table style="width:100%;font-size:.72rem;border-collapse:collapse">
+                <thead><tr style="text-align:left;color:var(--ink3)"><th>#</th><th>內容</th><th>Y (pt)</th><th>高度 (pt)</th><th>字級</th><th>行高倍數</th></tr></thead>
+                <tbody>${debugRows}</tbody>
+              </table>
+            </div>
+          </details>` : '';
+        resultEl.innerHTML = `<div class="config-hint" style="margin-bottom:.5rem">✅ 合成成功，以下是實際會寄出的圖片：${sizeInfo}</div><img src="${res.imageDataUri}" style="width:100%;display:block;border-radius:8px;box-shadow:6px 6px 16px rgba(0,0,0,.25)">${debugTable}`;
+      } else {
+        resultEl.innerHTML = `<div class="login-err" style="display:block">⚠️ 合成失敗：${cardEsc(cardErrMsg(res))}${res && res.stack ? '<br><span style="font-size:.72rem;opacity:.7">'+cardEsc(res.stack)+'</span>' : ''}</div>`;
+      }
+    })
+    .catch(()=>{ resultEl.innerHTML = '<div class="login-err" style="display:block">⚠️ 連線失敗，請確認 Apps Script 已部署最新版本</div>'; });
+}
+
+// 清掉內文裡真正空的殼標籤（過去反覆調整字級/顏色留下的殘留包裝）。只會移除完全沒有任何
+// 子節點的 span/font，不會動到有文字、有 <br>、或空白行用的隱形字元標記的內容，所以不會
+// 弄丟任何實際看得到的文字或格式；但如果內文已經累積非常多層「有內容但重複巢狀」的標籤
+// （不是單純空殼），這個按鈕沒辦法完全整理乾淨，那種情況建議整段文字重新輸入、重新套用格式
+function cleanupContent(type){
+  const body = document.getElementById(cardPfx(type)+'-body');
+  const before = body.querySelectorAll('span, font').length;
+  pruneEmptyElements(body);
+  const after = body.querySelectorAll('span, font').length;
+  const statusEl = document.getElementById(cardPfx(type)+'-cc-status');
+  statusEl.textContent = `✅ 已清除 ${before - after} 個空殼標籤（清理前 ${before} 個，清理後 ${after} 個）`;
+  setTimeout(()=>statusEl.textContent='', 5000);
+}
+
+/* ── 賀卡寄送設定（birthday / anniversary 共用）── */
+function loadSendSettings(type){
+  gsGet('getCardSendSettings', {cardType:type})
+    .then(s=>{
+      s = s || {};
+      bccEmailsState[type] = s.bccList || [];
+      renderBccChips(type);
+      document.getElementById(cardPfx(type)+'-daysbefore').value = s.daysBefore ?? 0;
+      document.getElementById(cardPfx(type)+'-hour').value = s.sendHour ?? 9;
+      document.getElementById(cardPfx(type)+'-enabled').checked = !!s.enabled;
+      updateEnabledLabel(type);
+      document.getElementById(cardPfx(type)+'-send-status').textContent = s.lastRun ? ('最後執行：' + s.lastRun) : '';
+    })
+    .catch(()=>{ document.getElementById(cardPfx(type)+'-send-status').textContent = '⚠️ 寄送設定載入失敗'; });
+}
+
+function updateEnabledLabel(type){
+  document.getElementById(cardPfx(type)+'-enabled-label').textContent = document.getElementById(cardPfx(type)+'-enabled').checked ? '啟用中' : '停用中';
+}
+
+function renderBccChips(type){
+  const wrap = document.getElementById(cardPfx(type)+'-bcc-chips');
+  const list = bccEmailsState[type];
+  if(!list.length){ wrap.innerHTML = '<span class="config-hint" style="margin:0">尚未新增密件副本收件人</span>'; return; }
+  wrap.innerHTML = list.map((email,i)=>
+    `<span class="chip">${cardEsc(email)}<span class="x" onclick="removeBcc('${type}',${i})">✕</span></span>`
+  ).join('');
+}
+function addBcc(type){
+  const input = document.getElementById(cardPfx(type)+'-bcc-input');
+  const email = input.value.trim();
+  if(!email || !email.includes('@')){ alert('請輸入正確的 Email'); return; }
+  if(bccEmailsState[type].includes(email)){ input.value=''; return; }
+  bccEmailsState[type].push(email); input.value=''; renderBccChips(type);
+}
+function removeBcc(type, i){ bccEmailsState[type].splice(i,1); renderBccChips(type); }
+
+function saveSendSettings(type){
+  const daysBefore = parseInt(document.getElementById(cardPfx(type)+'-daysbefore').value, 10) || 0;
+  const sendHour = parseInt(document.getElementById(cardPfx(type)+'-hour').value, 10);
+  const enabled = document.getElementById(cardPfx(type)+'-enabled').checked;
+  const statusEl = document.getElementById(cardPfx(type)+'-send-status');
+  statusEl.textContent = '儲存中…';
+  gsPost({ action:'saveCardSendSettings', cardType:type, bccList: bccEmailsState[type], daysBefore, sendHour, enabled })
+    .then(res=>{ statusEl.textContent = cardOk(res) ? '✅ 設定已儲存，觸發器已更新' : '⚠️ 儲存失敗'; })
+    .catch(()=>{ statusEl.textContent = '⚠️ 連線失敗'; });
+}
+
+function runSendNow(type){
+  if(!confirm('確定要立即執行一次寄送檢查嗎？符合條件且尚未寄送的員工將會馬上收到賀卡。')) return;
+  const statusEl = document.getElementById(cardPfx(type)+'-send-status');
+  statusEl.textContent = '執行中…';
+  gsPost({ action:'runCardSendNow', cardType:type })
+    .then(res=>{ statusEl.textContent = cardOk(res) ? `✅ 執行完成，共寄出 ${res.sent} 張賀卡` : '⚠️ 執行失敗'; })
+    .catch(()=>{ statusEl.textContent = '⚠️ 連線失敗'; });
+}
+
+/* ── 賀卡寄送紀錄 ──
+   生日、週年是各自獨立的工作表／action，這裡兩種都要各自帶 cardType 查一次再合併，
+   否則後端 cardTypeConfig() 在沒收到 cardType 時一律預設成 birthday，週年的紀錄永遠查不到。 */
+let sendLogAllCache = [];
+
+function loadSendLog(){
+  document.getElementById('log-table-wrap').innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div>';
+  Promise.all([
+    gsGet('getCardSendLog', {cardType:'birthday'}).then(res=>{
+      const logs = Array.isArray(res) ? res : (res.logs || []);
+      return logs.map(l=>Object.assign({typeLabel:'生日'}, l));
+    }),
+    gsGet('getCardSendLog', {cardType:'anniversary'}).then(res=>{
+      const logs = Array.isArray(res) ? res : (res.logs || []);
+      return logs.map(l=>Object.assign({typeLabel:'週年'}, l));
+    })
+  ]).then(([bdLogs, anLogs])=>{
+      sendLogAllCache = bdLogs.concat(anLogs).sort((a,b)=>String(b.sentAt).localeCompare(String(a.sentAt)));
+      populateSendLogFilters();
+      renderFilteredSendLog();
+    })
+    .catch(()=>{ document.getElementById('log-table-wrap').innerHTML = '<div class="table-empty">⚠️ 資料載入失敗</div>'; });
+}
+
+// 「寄送時間」存的是 yyyy/MM/dd HH:mm:ss 字串，這裡拆出年/月/日（月、日不補零，跟下拉選單的 value 對齊）
+function parseSendLogYMD(sentAt){
+  const m = String(sentAt||'').match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  if(!m) return null;
+  return { y: m[1], mo: String(parseInt(m[2],10)), d: String(parseInt(m[3],10)) };
+}
+
+// 年份選項依實際資料動態產生（並確保一定包含今年）；月／日選項固定，且只在第一次建立時
+// 設成「今天」的預設值，之後重新整理不會把使用者已經選好的篩選條件蓋掉。
+function populateSendLogFilters(){
+  const today = new Date();
+  const todayY = String(today.getFullYear());
+  const todayM = String(today.getMonth()+1);
+  const todayD = String(today.getDate());
+
+  const years = Array.from(new Set(sendLogAllCache.map(l=>{ const p=parseSendLogYMD(l.sentAt); return p?p.y:null; }).filter(Boolean)));
+  if(!years.includes(todayY)) years.push(todayY);
+  years.sort((a,b)=>b-a);
+
+  const yearSel = document.getElementById('log-filter-year');
+  const prevY = yearSel.value || todayY;
+  yearSel.innerHTML = '<option value="">全部</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  yearSel.value = years.includes(prevY) ? prevY : todayY;
+
+  const monthSel = document.getElementById('log-filter-month');
+  if(!monthSel.options.length){
+    monthSel.innerHTML = '<option value="">全部</option>' + Array.from({length:12},(_,i)=>i+1).map(m=>`<option value="${m}">${m}月</option>`).join('');
+    monthSel.value = todayM;
+  }
+
+  const daySel = document.getElementById('log-filter-day');
+  if(!daySel.options.length){
+    daySel.innerHTML = '<option value="">全部</option>' + Array.from({length:31},(_,i)=>i+1).map(d=>`<option value="${d}">${d}日</option>`).join('');
+    daySel.value = todayD;
+  }
+}
+
+function renderFilteredSendLog(){
+  const fy = document.getElementById('log-filter-year').value;
+  const fm = document.getElementById('log-filter-month').value;
+  const fd = document.getElementById('log-filter-day').value;
+  const logs = sendLogAllCache.filter(l=>{
+    const p = parseSendLogYMD(l.sentAt);
+    if(!p) return false;
+    if(fy && p.y !== fy) return false;
+    if(fm && p.mo !== fm) return false;
+    if(fd && p.d !== fd) return false;
+    return true;
+  });
+  document.getElementById('log-count').textContent = `共 ${logs.length} 筆`;
+  const wrap = document.getElementById('log-table-wrap');
+  if(!logs.length){ wrap.innerHTML = '<div class="table-empty">尚無符合條件的寄送紀錄</div>'; return; }
+  let html = '<div class="table-scroll"><table class="log-table"><thead><tr><th>賀卡類型</th><th>工號</th><th>姓名</th><th>部門</th><th>Email</th><th>年度</th><th>寄送時間</th></tr></thead><tbody>';
+  logs.forEach(l=>{
+    html += `<tr><td>${cardEsc(l.typeLabel)}</td><td>${cardEsc(l.empId)}</td><td>${cardEsc(l.name)}</td><td>${cardEsc(l.dept)}</td><td>${cardEsc(l.email)}</td><td>${cardEsc(l.year)}</td><td>${cardEsc(l.sentAt)}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
+}
+
+/* ── 賀卡區的一次性 DOM 綁定（拖曳上傳、時間下拉、色票、選取範圍記錄）── */
+document.addEventListener('DOMContentLoaded', ()=>{
+  ['birthday','anniversary'].forEach(type=>{
+    const zone = document.getElementById(cardPfx(type)+'-upload-zone');
+    if(!zone) return;
+    ['dragover','dragenter'].forEach(evt=>zone.addEventListener(evt, e=>{ e.preventDefault(); zone.classList.add('drag'); }));
+    ['dragleave','drop'].forEach(evt=>zone.addEventListener(evt, e=>{ e.preventDefault(); zone.classList.remove('drag'); }));
+    zone.addEventListener('drop', e=>{ if(e.dataTransfer.files.length) handleImageSelect(type, e.dataTransfer.files); });
+  });
+
+  ['bd-hour','an-hour'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    for(let h=0; h<24; h++){
+      const opt = document.createElement('option');
+      opt.value = h; opt.textContent = String(h).padStart(2,'0') + ':00';
+      sel.appendChild(opt);
+    }
+  });
+
+  ['birthday','anniversary'].forEach(type=>{
+    const cb = document.getElementById(cardPfx(type)+'-enabled');
+    if(cb) cb.addEventListener('change', ()=>updateEnabledLabel(type));
+  });
+
+  // 記錄內文編輯區目前的選取範圍，讓字級/顏色下拉選單（需要搶走焦點才能開啟）
+  // 在使用者選色/選字級之後，仍能套用到原本選取的文字；同時即時把字級/行高輸入框
+  // 更新成游標目前所在文字的實際數值，讓調整字級/行高變成「所見即所得」的互動操作，
+  // 而不是每次都顯示固定的預設值
+  ['birthday','anniversary'].forEach(type=>{
+    const body = document.getElementById(cardPfx(type)+'-body');
+    if(!body) return;
+    ['mouseup','keyup'].forEach(evt=>body.addEventListener(evt, ()=>{
+      const sel = window.getSelection();
+      if(sel.rangeCount && body.contains(sel.anchorNode)) savedRanges[type] = sel.getRangeAt(0);
+      updateToolbarFromCursor(type);
+    }));
+  });
+
+  ['birthday','anniversary'].forEach(type=>{
+    const grid = document.getElementById(cardPfx(type)+'-color-grid');
+    if(!grid) return;
+    grid.innerHTML = COLOR_SWATCHES.map(c=>
+      `<span class="color-swatch" style="background:${c}" title="${c}" onmousedown="event.preventDefault()" onclick="applyColor('${type}','${c}')"></span>`
+    ).join('');
+  });
+
+  // 點到色票面板以外的地方就收起面板
+  document.addEventListener('click', e=>{
+    document.querySelectorAll('.color-picker-wrap').forEach(wrap=>{
+      if(!wrap.contains(e.target)){
+        const palette = wrap.querySelector('.color-palette');
+        if(palette) palette.classList.remove('open');
+      }
+    });
+  });
+});
 
 /* ══════════════════════════════════════════════════════════════
    初始化
