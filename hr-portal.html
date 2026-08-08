@@ -601,6 +601,7 @@ tr:hover td{background:var(--paper)}
           <!-- HR-ONLY-START -->
           <div class="nav-item" id="nav-chartdownload" data-tab="tab-chartdownload" onclick="switchTab('tab-chartdownload')" style="display:none"><span class="ni">⬇️</span>圖表下載</div>
           <div class="nav-item" id="nav-notify" data-tab="tab-notify" onclick="switchTab('tab-notify')" style="display:none"><span class="ni">🔔</span>通知設定</div>
+          <div class="nav-item" id="nav-empsync" data-tab="tab-empsync" onclick="switchTab('tab-empsync')" style="display:none"><span class="ni">🔄</span>同步員工資料設定</div>
           <div class="nav-item" id="nav-admin" data-tab="tab-admin" onclick="switchTab('tab-admin')" style="display:none"><span class="ni">⚙️</span>系統管理</div>
           <!-- HR-ONLY-END -->
         </div>
@@ -1008,6 +1009,61 @@ tr:hover td{background:var(--paper)}
           <button class="btn-secondary btn-sm" onclick="testSendNotifications()">✉ 立即測試寄送</button>
         </div>
         <div id="notify-status" style="margin-top:.75rem;font-size:.82rem"></div>
+      </div>
+    </div>
+
+    <!-- ── 同步員工資料設定 ── -->
+    <div id="tab-empsync" class="tab-content">
+      <div class="page-title">同步員工資料設定</div>
+      <div class="page-sub">設定固定檔名，從雲端硬碟同步員工總表資料到「員工資料」，可手動執行或設定每日自動同步</div>
+
+      <div class="config-card">
+        <h3>1. 設定來源檔案</h3>
+        <div class="config-row">
+          <label>固定檔名</label>
+          <input type="text" id="empsync-filename" placeholder="例如：員工資料匯出">
+        </div>
+        <div class="config-hint" style="margin:0 0 1rem">系統每次同步都會在雲端硬碟中尋找此檔名、且最近更新的 Google 試算表檔案（讀取其第一個工作表），適合每天用同一個檔名覆蓋/另存的情境。</div>
+        <div class="config-row">
+          <label>標題列（第幾列）</label>
+          <input type="number" id="empsync-headerrow" min="1" step="1" value="1" style="max-width:100px">
+        </div>
+        <div class="config-hint" style="margin:0 0 1rem">若來源檔案前面有幾列說明或空白，欄位標題不是在第 1 列，請填實際所在的列數（例如第 9 列）。來源檔案欄位需與「員工資料」欄位完全一致、順序相同（最後一欄「累計留停天數」除外，來源檔案不需要這一欄），系統不會另外比對欄位名稱。</div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+          <button class="btn-sm btn-secondary" onclick="readEmpSyncColumns()">讀取欄位</button>
+          <button class="btn-sm btn-primary" onclick="saveEmpSyncSource()">💾 儲存設定</button>
+        </div>
+        <div id="empsync-source-status" style="margin-top:.75rem;font-size:.82rem"></div>
+      </div>
+
+      <div class="config-card">
+        <h3>2. 每日自動同步</h3>
+        <div class="config-row">
+          <label>是否啟用每日自動同步</label>
+          <div class="toggle-row">
+            <label class="toggle"><input type="checkbox" id="empsync-enabled"><span class="toggle-slider"></span></label>
+            <span class="config-hint" id="empsync-enabled-label" style="margin:0">停用中</span>
+          </div>
+        </div>
+        <div class="config-row">
+          <label>每日同步時間</label>
+          <select id="empsync-hour" style="max-width:100px"></select>
+          <span>時</span>
+          <select id="empsync-minute" style="max-width:100px"></select>
+          <span>分</span>
+        </div>
+        <div class="config-hint" style="margin:0 0 1rem">Apps Script 觸發器僅保證在此時段內的某個時間點執行，非精確整點。</div>
+        <button class="btn-sm btn-primary" onclick="saveEmpSyncSchedule()">💾 儲存設定</button>
+        <div id="empsync-lastrun" class="config-hint" style="margin-top:.75rem"></div>
+      </div>
+
+      <div class="config-card">
+        <h3>3. 執行同步</h3>
+        <p style="font-size:.82rem;color:var(--ink3);margin-bottom:.9rem;line-height:1.7">
+          以來源檔案的資料整份取代 HR-PORTAL 試算表「員工資料」工作表目前所有欄位內容（最後一欄「累計留停天數」除外，維持試算表原有資料不動）；來源檔案沒有的員工編號，「員工資料」中對應的那筆資料將被刪除。此操作會實際覆蓋員工資料，請確認來源檔案內容正確後再執行。
+        </p>
+        <button class="btn-sm btn-danger" onclick="runEmpSyncNow()">🔄 立即同步</button>
+        <div id="empsync-run-status" class="config-hint" style="margin-top:.75rem"></div>
       </div>
     </div>
 
@@ -2770,6 +2826,8 @@ function enterApp(){
   if(navChartDownload) navChartDownload.style.display = currentUser.role==='admin' ? '' : 'none';
   const navNotify = document.getElementById('nav-notify');
   if(navNotify) navNotify.style.display = currentUser.role==='admin' ? '' : 'none';
+  const navEmpSync = document.getElementById('nav-empsync');
+  if(navEmpSync) navEmpSync.style.display = currentUser.role==='admin' ? '' : 'none';
   // 「員工賀卡管理」整個群組（標題列＋其下 6 個子分頁）僅開放給人資管理員，
   // 收合狀態下子項本來就不顯示，隱藏群組標題列即等同隱藏整區。
   const navGroupCards = document.getElementById('nav-group-cards');
@@ -2930,7 +2988,7 @@ function orgChartGoToDepartment(code){
    三處都以這份清單為準，新增賀卡子分頁時只要改這裡。 */
 const CARD_TAB_IDS = ['tab-card-dashboard','tab-card-employees','tab-card-birthday','tab-card-anniversary','tab-card-sendsettings','tab-card-sendlog'];
 /* 僅限人資管理員可進入的分頁（非管理員一律導回總覽）。 */
-const ADMIN_ONLY_TAB_IDS = ['tab-admin','tab-chartdownload','tab-notify'].concat(CARD_TAB_IDS);
+const ADMIN_ONLY_TAB_IDS = ['tab-admin','tab-chartdownload','tab-notify','tab-empsync'].concat(CARD_TAB_IDS);
 
 /** 側邊選單主功能群組的單開手風琴：展開被點的群組、收合其他群組；再點一次已展開的則收合。 */
 function toggleNavGroup(headerId){
@@ -2957,7 +3015,7 @@ function switchTab(tabId){
   // 意義，直接隱藏；其餘頁面維持顯示。「員工賀卡管理」底下的分頁同理（賀卡寄送對象一律是
   // 全公司在職員工，不受組織範圍篩選影響），一併隱藏。
   const topbarEl = document.querySelector('.topbar');
-  if(topbarEl) topbarEl.style.display = (tabId==='tab-notify' || tabId==='tab-admin' || CARD_TAB_IDS.indexOf(tabId) >= 0) ? 'none' : '';
+  if(topbarEl) topbarEl.style.display = (tabId==='tab-notify' || tabId==='tab-empsync' || tabId==='tab-admin' || CARD_TAB_IDS.indexOf(tabId) >= 0) ? 'none' : '';
   requestAnimationFrame(()=>renderAll());
 }
 
@@ -2986,6 +3044,7 @@ function renderAll(){
   if(activeTab==='tab-directory') renderDirectory();
   if(activeTab==='tab-admin' && currentUser.role==='admin'){ renderAdminList(); renderFieldLegend(); }
   if(activeTab==='tab-notify' && currentUser.role==='admin'){ renderNotifySettings(); }
+  if(activeTab==='tab-empsync' && currentUser.role==='admin'){ loadEmpSyncSettings(); }
   // 「員工賀卡管理」各分頁的資料一律於切換到該分頁時才向後端讀取（比照通知設定／系統管理），
   // 資料來源是賀卡專用的 action，跟上方組織範圍篩選無關。
   if(currentUser.role==='admin'){
@@ -4967,6 +5026,114 @@ function testSendNotifications(){
   });
 }
 
+/* ══════════════════════════════════════════════════════════════
+   同步員工資料設定：從雲端硬碟固定檔名的 Google 試算表，同步覆蓋 HR-PORTAL 試算表的
+   「員工資料」工作表（新增／更新／刪除，比對鍵為員工編號；最後一欄「累計留停天數」全程不動）。
+   ══════════════════════════════════════════════════════════════ */
+let empSyncHourMinPopulated = false;
+
+function populateEmpSyncHourMinuteSelects(){
+  if(empSyncHourMinPopulated) return;
+  empSyncHourMinPopulated = true;
+  document.getElementById('empsync-hour').innerHTML =
+    Array.from({length:24},(_,h)=>`<option value="${h}">${String(h).padStart(2,'0')}</option>`).join('');
+  document.getElementById('empsync-minute').innerHTML =
+    Array.from({length:60},(_,m)=>`<option value="${m}">${String(m).padStart(2,'0')}</option>`).join('');
+  document.getElementById('empsync-enabled').addEventListener('change', updateEmpSyncEnabledLabel);
+}
+
+function updateEmpSyncEnabledLabel(){
+  document.getElementById('empsync-enabled-label').textContent =
+    document.getElementById('empsync-enabled').checked ? '啟用中' : '停用中';
+}
+
+function loadEmpSyncSettings(){
+  populateEmpSyncHourMinuteSelects();
+  if(!GS_URL){
+    document.getElementById('empsync-lastrun').innerHTML = '<span style="color:var(--red)">尚未設定 Apps Script 網址，請先於「系統管理」設定連線</span>';
+    return;
+  }
+  gsGet('getEmpSyncSettings').then(s=>{
+    if(!s.ok) return;
+    document.getElementById('empsync-filename').value = s.fileName || '';
+    document.getElementById('empsync-headerrow').value = s.headerRow || 1;
+    document.getElementById('empsync-hour').value = s.hour ?? 0;
+    document.getElementById('empsync-minute').value = s.minute ?? 0;
+    document.getElementById('empsync-enabled').checked = !!s.enabled;
+    updateEmpSyncEnabledLabel();
+    document.getElementById('empsync-lastrun').textContent = s.lastRun ? `最後執行：${s.lastRun}（共 ${s.lastCount} 筆資料）` : '尚未執行過同步';
+  }).catch(()=>{
+    document.getElementById('empsync-lastrun').innerHTML = '<span style="color:var(--red)">設定載入失敗</span>';
+  });
+}
+
+function readEmpSyncColumns(){
+  const status = document.getElementById('empsync-source-status');
+  const fileName = document.getElementById('empsync-filename').value.trim();
+  const headerRow = parseInt(document.getElementById('empsync-headerrow').value, 10) || 1;
+  if(!fileName){ status.innerHTML = '<span style="color:var(--red)">請先輸入固定檔名</span>'; return; }
+  if(!GS_URL){ status.innerHTML = '<span style="color:var(--red)">尚未設定 Apps Script 網址</span>'; return; }
+  status.innerHTML = '<span style="color:var(--ink3)">讀取中…</span>';
+  gsGet('readEmpSyncColumns', {fileName, headerRow}).then(d=>{
+    if(!d.ok){ status.innerHTML = `<span style="color:var(--red)">讀取失敗：${d.error||'未知錯誤'}</span>`; return; }
+    let html = `<span style="color:var(--green)">已找到「${cardEsc(d.fileName)}」（最近更新：${cardEsc(d.fileUpdated)}），共 ${d.sourceColumnCount} 欄</span>`;
+    if(d.mismatches.length){
+      html += `<div style="color:var(--red);margin-top:.4rem">⚠️ 有 ${d.mismatches.length} 欄跟「員工資料」目前的欄位對不上（將導致同步後資料錯位，請確認欄位順序）：</div>`;
+      html += '<div class="table-scroll" style="margin-top:.4rem"><table class="log-table"><thead><tr><th>第幾欄</th><th>來源檔案欄位</th><th>員工資料欄位</th></tr></thead><tbody>' +
+        d.mismatches.map(m=>`<tr><td>${m.col}</td><td>${cardEsc(m.source)}</td><td>${cardEsc(m.target)}</td></tr>`).join('') +
+        '</tbody></table></div>';
+    } else {
+      html += `<div style="color:var(--green);margin-top:.4rem">✅ 欄位順序與「員工資料」完全一致</div>`;
+    }
+    status.innerHTML = html;
+  }).catch(err=>{
+    status.innerHTML = `<span style="color:var(--red)">連線失敗：${err.message}</span>`;
+  });
+}
+
+function saveEmpSyncSource(){
+  const status = document.getElementById('empsync-source-status');
+  const fileName = document.getElementById('empsync-filename').value.trim();
+  const headerRow = parseInt(document.getElementById('empsync-headerrow').value, 10) || 1;
+  if(!fileName){ status.innerHTML = '<span style="color:var(--red)">請先輸入固定檔名</span>'; return; }
+  if(!GS_URL){ status.innerHTML = '<span style="color:var(--red)">尚未設定 Apps Script 網址</span>'; return; }
+  status.innerHTML = '<span style="color:var(--ink3)">儲存中…</span>';
+  gsPost({action:'saveEmpSyncSourceSettings', fileName, headerRow}).then(d=>{
+    status.innerHTML = d.ok ? '<span style="color:var(--green)">✅ 來源檔案設定已儲存</span>' : `<span style="color:var(--red)">儲存失敗：${d.error||'未知錯誤'}</span>`;
+  }).catch(err=>{
+    status.innerHTML = `<span style="color:var(--red)">連線失敗：${err.message}</span>`;
+  });
+}
+
+function saveEmpSyncSchedule(){
+  const hour = Number(document.getElementById('empsync-hour').value);
+  const minute = Number(document.getElementById('empsync-minute').value);
+  const enabled = document.getElementById('empsync-enabled').checked;
+  const status = document.getElementById('empsync-lastrun');
+  if(!GS_URL){ status.innerHTML = '<span style="color:var(--red)">尚未設定 Apps Script 網址</span>'; return; }
+  status.innerHTML = '<span style="color:var(--ink3)">儲存中…</span>';
+  gsPost({action:'saveEmpSyncScheduleSettings', hour, minute, enabled}).then(d=>{
+    if(!d.ok){ status.innerHTML = `<span style="color:var(--red)">儲存失敗：${d.error||'未知錯誤'}</span>`; return; }
+    status.innerHTML = `<span style="color:var(--green)">✅ 已儲存，${enabled ? `將於每天 ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')} 自動同步` : '每日自動同步已停用'}</span>`;
+  }).catch(err=>{
+    status.innerHTML = `<span style="color:var(--red)">連線失敗：${err.message}</span>`;
+  });
+}
+
+function runEmpSyncNow(){
+  if(!confirm('確定要立即執行同步嗎？這會依來源檔案新增／更新／刪除「員工資料」的員工列（最後一欄「累計留停天數」除外），此操作無法復原，請確認來源檔案內容正確。')) return;
+  const status = document.getElementById('empsync-run-status');
+  if(!GS_URL){ status.innerHTML = '<span style="color:var(--red)">尚未設定 Apps Script 網址</span>'; return; }
+  status.innerHTML = '<span style="color:var(--ink3)">同步中，請稍候…</span>';
+  gsPost({action:'runEmployeeDataSync'}).then(d=>{
+    if(!d.ok){ status.innerHTML = `<span style="color:var(--red)">同步失敗：${d.error||'未知錯誤'}</span>`; return; }
+    status.innerHTML = `<span style="color:var(--green)">✅ 同步完成：共 ${d.total} 筆（新增 ${d.added}、更新 ${d.updated}、刪除 ${d.deleted}、未變動 ${d.unchanged}）</span>`;
+    document.getElementById('empsync-lastrun').textContent = `最後執行：${d.lastRun}（共 ${d.total} 筆資料）`;
+  }).catch(err=>{
+    status.innerHTML = `<span style="color:var(--red)">連線失敗：${err.message}</span>`;
+  });
+}
+
 /* ---------- 欄位範本 / CSV 匯入 ---------- */
 const ALL_FIELDS = [{"idx": 1, "label": "#", "required": false}, {"idx": 2, "label": "員工編號", "required": true}, {"idx": 3, "label": "姓名", "required": true}, {"idx": 4, "label": "英文姓名", "required": true}, {"idx": 5, "label": "別名", "required": false}, {"idx": 6, "label": "國籍", "required": true}, {"idx": 7, "label": "出生地", "required": false}, {"idx": 8, "label": "身分證號", "required": false}, {"idx": 9, "label": "性別", "required": true}, {"idx": 10, "label": "生日", "required": true}, {"idx": 11, "label": "年齡", "required": false}, {"idx": 12, "label": "生肖", "required": false}, {"idx": 13, "label": "星座", "required": false}, {"idx": 14, "label": "血型", "required": true}, {"idx": 15, "label": "婚姻狀況", "required": true}, {"idx": 16, "label": "兵役狀況", "required": false}, {"idx": 17, "label": "退伍日期", "required": false}, {"idx": 18, "label": "身高", "required": false}, {"idx": 19, "label": "體重", "required": false}, {"idx": 20, "label": "族群身分", "required": true}, {"idx": 21, "label": "有無前科", "required": false}, {"idx": 22, "label": "就職來源代碼", "required": false}, {"idx": 23, "label": "就職來源名稱", "required": false}, {"idx": 24, "label": "障礙等級(1)", "required": false}, {"idx": 25, "label": "障礙類別(1)", "required": false}, {"idx": 26, "label": "障礙等級(2)", "required": false}, {"idx": 27, "label": "障礙類別(2)", "required": false}, {"idx": 28, "label": "障礙等級(3)", "required": false}, {"idx": 29, "label": "障礙類別(3)", "required": false}, {"idx": 30, "label": "個人資料-備註", "required": false}, {"idx": 31, "label": "外僑統一證號", "required": false}, {"idx": 32, "label": "仲介單位代碼", "required": false}, {"idx": 33, "label": "仲介單位名稱", "required": false}, {"idx": 34, "label": "護照號碼", "required": false}, {"idx": 35, "label": "護照姓名", "required": false}, {"idx": 36, "label": "最近入境日期", "required": false}, {"idx": 37, "label": "最近出境日期", "required": false}, {"idx": 38, "label": "最近居留證到期日", "required": false}, {"idx": 39, "label": "被扶養人 / 配偶計入免稅額人數", "required": false}, {"idx": 40, "label": "健眷加保人數", "required": false}, {"idx": 41, "label": "最高學歷", "required": true}, {"idx": 42, "label": "最高學歷-學校", "required": false}, {"idx": 43, "label": "最高學歷-科系", "required": false}, {"idx": 44, "label": "最高學歷-科系類別", "required": false}, {"idx": 45, "label": "最新契約種類代碼", "required": false}, {"idx": 46, "label": "最新契約種類名稱", "required": false}, {"idx": 47, "label": "最新契約詳細名稱", "required": false}, {"idx": 48, "label": "最新契約開始日期", "required": false}, {"idx": 49, "label": "最新契約結束日期", "required": false}, {"idx": 50, "label": "最新契約狀態", "required": false}, {"idx": 51, "label": "公司電話", "required": false}, {"idx": 52, "label": "分機", "required": false}, {"idx": 53, "label": "住家電話", "required": false}, {"idx": 54, "label": "戶籍電話", "required": false}, {"idx": 55, "label": "行動電話", "required": false}, {"idx": 56, "label": "公司 E-mail", "required": false}, {"idx": 57, "label": "個人 E-mail", "required": false}, {"idx": 58, "label": "戶籍地區", "required": true}, {"idx": 59, "label": "戶籍地址", "required": false}, {"idx": 60, "label": "通訊地區", "required": true}, {"idx": 61, "label": "通訊地址", "required": false}, {"idx": 62, "label": "國外地址", "required": false}, {"idx": 63, "label": "社群帳號 ( 1 )", "required": false}, {"idx": 64, "label": "社群帳號 ( 2 )", "required": false}, {"idx": 65, "label": "聯絡資訊-備註", "required": false}, {"idx": 66, "label": "緊急聯絡人(1)-姓名", "required": false}, {"idx": 67, "label": "緊急聯絡人(1)-關係", "required": false}, {"idx": 68, "label": "緊急聯絡人(1)-電話", "required": false}, {"idx": 69, "label": "緊急聯絡人(1)-行動電話", "required": false}, {"idx": 70, "label": "緊急聯絡人(2)-姓名", "required": false}, {"idx": 71, "label": "緊急聯絡人(2)-關係", "required": false}, {"idx": 72, "label": "緊急聯絡人(2)-電話", "required": false}, {"idx": 73, "label": "緊急聯絡人(2)-行動電話", "required": false}, {"idx": 74, "label": "扣繳單位名稱", "required": false}, {"idx": 75, "label": "統一編號", "required": false}, {"idx": 76, "label": "部門代碼", "required": true}, {"idx": 77, "label": "部門名稱", "required": true}, {"idx": 78, "label": "組織類別(2) 部門代碼", "required": false}, {"idx": 79, "label": "組織類別(2) 部門名稱", "required": false}, {"idx": 80, "label": "組織類別(3) 部門代碼", "required": false}, {"idx": 81, "label": "組織類別(3) 部門名稱", "required": false}, {"idx": 82, "label": "組織類別(4) 部門代碼", "required": false}, {"idx": 83, "label": "組織類別(4) 部門名稱", "required": false}, {"idx": 84, "label": "組織類別(5) 部門代碼", "required": false}, {"idx": 85, "label": "組織類別(5) 部門名稱", "required": false}, {"idx": 86, "label": "職位代碼", "required": false}, {"idx": 87, "label": "職位名稱", "required": true}, {"idx": 88, "label": "職等代碼", "required": false}, {"idx": 89, "label": "職等名稱", "required": true}, {"idx": 90, "label": "職級代碼", "required": false}, {"idx": 91, "label": "職級名稱", "required": false}, {"idx": 92, "label": "職務類別代碼", "required": false}, {"idx": 93, "label": "職務類別名稱", "required": false}, {"idx": 94, "label": "職種代碼", "required": false}, {"idx": 95, "label": "職種名稱", "required": true}, {"idx": 96, "label": "職務說明書代碼", "required": false}, {"idx": 97, "label": "職務說明書名稱", "required": false}, {"idx": 98, "label": "名片職務代碼", "required": false}, {"idx": 99, "label": "名片職務名稱", "required": false}, {"idx": 100, "label": "身份類別代碼", "required": false}, {"idx": 101, "label": "身份類別名稱", "required": true}, {"idx": 102, "label": "直間接別", "required": true}, {"idx": 103, "label": "責任區分", "required": false}, {"idx": 104, "label": "編制狀態", "required": false}, {"idx": 105, "label": "工作區域代碼", "required": false}, {"idx": 106, "label": "工作區域名稱", "required": true}, {"idx": 107, "label": "工作地點代碼", "required": false}, {"idx": 108, "label": "工作地點名稱", "required": true}, {"idx": 109, "label": "廠別代碼", "required": false}, {"idx": 110, "label": "廠別名稱", "required": true}, {"idx": 111, "label": "現任部門職務-備註", "required": false}, {"idx": 112, "label": "在職狀態", "required": true}, {"idx": 113, "label": "到職日期", "required": false}, {"idx": 114, "label": "到企業集團日", "required": false}, {"idx": 115, "label": "轉出集團日", "required": false}, {"idx": 116, "label": "最後離職日期", "required": true}, {"idx": 117, "label": "最後離職復職日期", "required": false}, {"idx": 118, "label": "最後留職停薪日期", "required": false}, {"idx": 119, "label": "最後留停復職日期", "required": false}, {"idx": 120, "label": "最後到復職日期", "required": false}, {"idx": 121, "label": "試用期", "required": false}, {"idx": 122, "label": "試用期滿日期", "required": false}, {"idx": 123, "label": "試用期說明", "required": false}, {"idx": 124, "label": "工作年資起算日", "required": true}, {"idx": 125, "label": "工作年資(未扣減留停離職年資)", "required": false}, {"idx": 126, "label": "扣減留停離職年資", "required": true}, {"idx": 127, "label": "工作年資", "required": false}, {"idx": 128, "label": "退休年資起算日", "required": false}, {"idx": 129, "label": "勞退舊制年資結清", "required": false}, {"idx": 130, "label": "試用期，到職日及年資-備註", "required": false}, {"idx": 131, "label": "兼職 ( 一 )-最新任職日期", "required": false}, {"idx": 132, "label": "兼職 ( 一 )-最新卸職日期", "required": false}, {"idx": 133, "label": "兼職 ( 一 )-最新公司名稱", "required": false}, {"idx": 134, "label": "兼職 ( 一 )-最新部門代碼", "required": false}, {"idx": 135, "label": "兼職 ( 一 )-最新部門名稱", "required": false}, {"idx": 136, "label": "兼職 ( 一 )-最新職位代碼", "required": false}, {"idx": 137, "label": "兼職 ( 一 )-最新職位名稱", "required": false}, {"idx": 138, "label": "兼職 ( 一 )-最新職務類別代碼", "required": false}, {"idx": 139, "label": "兼職 ( 一 )-最新職務類別名稱", "required": false}, {"idx": 140, "label": "兼職 ( 一 )-最新職等代碼", "required": false}, {"idx": 141, "label": "兼職 ( 一 )-最新職等名稱", "required": false}, {"idx": 142, "label": "兼職 ( 一 )-最新職級代碼", "required": false}, {"idx": 143, "label": "兼職 ( 一 )-最新職級名稱", "required": false}, {"idx": 144, "label": "兼職 ( 一 )-最新備註", "required": false}, {"idx": 145, "label": "兼職 ( 一 )-最後修改人員", "required": false}, {"idx": 146, "label": "兼職 ( 一 )-最後修改時間", "required": false}, {"idx": 147, "label": "兼職 ( 二 )-最新任職日期", "required": false}, {"idx": 148, "label": "兼職 ( 二 )-最新卸職日期", "required": false}, {"idx": 149, "label": "兼職 ( 二 )-最新公司名稱", "required": false}, {"idx": 150, "label": "兼職 ( 二 )-最新部門代碼", "required": false}, {"idx": 151, "label": "兼職 ( 二 )-最新部門名稱", "required": false}, {"idx": 152, "label": "兼職 ( 二 )-最新職位代碼", "required": false}, {"idx": 153, "label": "兼職 ( 二 )-最新職位名稱", "required": false}, {"idx": 154, "label": "兼職 ( 二 )-最新職務類別代碼", "required": false}, {"idx": 155, "label": "兼職 ( 二 )-最新職務類別名稱", "required": false}, {"idx": 156, "label": "兼職 ( 二 )-最新職等代碼", "required": false}, {"idx": 157, "label": "兼職 ( 二 )-最新職等名稱", "required": false}, {"idx": 158, "label": "兼職 ( 二 )-最新職級代碼", "required": false}, {"idx": 159, "label": "兼職 ( 二 )-最新職級名稱", "required": false}, {"idx": 160, "label": "兼職 ( 二 )-最新備註", "required": false}, {"idx": 161, "label": "兼職 ( 二 )-最後修改人員", "required": false}, {"idx": 162, "label": "兼職 ( 二 )-最後修改時間", "required": false}, {"idx": 163, "label": "兼職 ( 三 )-最新任職日期", "required": false}, {"idx": 164, "label": "兼職 ( 三 )-最新卸職日期", "required": false}, {"idx": 165, "label": "兼職 ( 三 )-最新公司名稱", "required": false}, {"idx": 166, "label": "兼職 ( 三 )-最新部門代碼", "required": false}, {"idx": 167, "label": "兼職 ( 三 )-最新部門名稱", "required": false}, {"idx": 168, "label": "兼職 ( 三 )-最新職位代碼", "required": false}, {"idx": 169, "label": "兼職 ( 三 )-最新職位名稱", "required": false}, {"idx": 170, "label": "兼職 ( 三 )-最新職務類別代碼", "required": false}, {"idx": 171, "label": "兼職 ( 三 )-最新職務類別名稱", "required": false}, {"idx": 172, "label": "兼職 ( 三 )-最新職等代碼", "required": false}, {"idx": 173, "label": "兼職 ( 三 )-最新職等名稱", "required": false}, {"idx": 174, "label": "兼職 ( 三 )-最新職級代碼", "required": false}, {"idx": 175, "label": "兼職 ( 三 )-最新職級名稱", "required": false}, {"idx": 176, "label": "兼職 ( 三 )-最新備註", "required": false}, {"idx": 177, "label": "兼職 ( 三 )-最後修改人員", "required": false}, {"idx": 178, "label": "兼職 ( 三 )-最後修改時間", "required": false}];
 const FIELD_MAP = {"員工編號": "empId", "姓名": "name", "英文姓名": "enName", "國籍": "nationality", "性別": "gender", "生日": "birthday", "血型": "bloodType", "婚姻狀況": "marital", "族群身分": "ethnic", "最高學歷": "education", "戶籍地區": "householdRegion", "通訊地區": "mailingRegion", "部門代碼": "deptCode", "部門名稱": "deptName", "職位名稱": "position", "職等名稱": "grade", "職種名稱": "jobCategory", "身份類別名稱": "identityCategory", "直間接別": "directIndirect", "工作區域名稱": "workArea", "工作地點名稱": "workLocation", "廠別名稱": "plant", "在職狀態": "employStatus", "到職日期": "hireDate", "最後離職日期": "resignDate", "工作年資起算日": "tenureStart", "扣減留停離職年資": "deductYears"};
@@ -5274,8 +5441,8 @@ function renderCardEmployees(list){
   sorted.forEach(e=>{
     html += `<tr><td>${cardEsc(e.dept)}</td><td>${cardEsc(e.empId)}</td><td>${cardEsc(e.name)}</td><td>${cardEsc(e.birthday)}</td>`+
             `<td>${cardEsc(e.hireDate)||'—'}</td><td>${e.completedYears!=null ? cardEsc(e.completedYears)+' 年' : '—'}</td><td>${cardEsc(e.email)}</td>`+
-            `<td>${e.sentThisYear ? '<span class="badge pass">已寄送</span>' : '<span class="badge wait">未寄送</span>'}</td>`+
-            `<td>${e.hireDate ? (e.anniversarySentThisYear ? '<span class="badge pass">已寄送</span>' : '<span class="badge wait">未寄送</span>') : '—'}</td>`+
+            `<td>${e.sentCardThisCalendarYear ? '<span class="badge pass">已寄送</span>' : '<span class="badge wait">未寄送</span>'}</td>`+
+            `<td>${e.hireDate ? (e.anniversarySentCardThisCalendarYear ? '<span class="badge pass">已寄送</span>' : '<span class="badge wait">未寄送</span>') : '—'}</td>`+
             `<td><button class="btn-sm btn-secondary" onclick="sendTestCard('${cardEsc(e.empId)}','birthday')">✉ 生日測試</button> `+
             `<button class="btn-sm btn-secondary" onclick="sendTestCard('${cardEsc(e.empId)}','anniversary')">✉ 週年測試</button></td></tr>`;
   });
@@ -5288,7 +5455,7 @@ function filterCardEmployees(){
   const st = document.getElementById('emp-filter').value;
   let list = cardEmployeesData.filter(e=>{
     const matchKw = !kw || [e.dept,e.empId,e.name].some(v=>String(v).toLowerCase().includes(kw));
-    const matchSt = !st || (st==='sent' ? e.sentThisYear : !e.sentThisYear);
+    const matchSt = !st || (st==='sent' ? e.sentCardThisCalendarYear : !e.sentCardThisCalendarYear);
     return matchKw && matchSt;
   });
   renderCardEmployees(list);
